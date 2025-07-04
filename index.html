@@ -92,18 +92,9 @@
         .chronometer-box button:hover {
             color: #3b82f6;
         }
-        .energy-graph-on-canvas-container {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            width: 300px;
-            height: 180px;
-            background-color: rgba(31, 41, 55, 0.8);
-            border-radius: 6px;
-            border: 1px solid #4b5563;
-            padding: 8px;
-            pointer-events: none;
-        }
+        /* Se eliminaron los estilos para .energy-graph-on-canvas-container */
+        /* Se eliminaron los estilos para #energy-graph-canvas */
+
         /* Layout de dos columnas FIJO */
         .main-container {
             display: flex;
@@ -155,9 +146,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 4c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm-1-8v4h2v-4h-2z"></path></svg>
                 </button>
             </div>
-            <div id="energy-graph-on-canvas-container" class="energy-graph-on-canvas-container hidden">
-                <canvas id="energy-graph-canvas"></canvas>
-            </div>
+            <!-- Se eliminó el contenedor de la gráfica de energía -->
         </div>
 
         <!-- Columna de Controles -->
@@ -219,7 +208,7 @@
                             <label class="flex items-center"><input type="checkbox" id="show-movable-ref" class="form-checkbox"> <span class="ml-2">Referencia móvil</span></label>
                             <label class="flex items-center"><input type="checkbox" id="show-ruler" class="form-checkbox"> <span class="ml-2">Regla</span></label>
                             <label class="flex items-center"><input type="checkbox" id="show-chronometer" class="form-checkbox"> <span class="ml-2">Cronómetro</span></label>
-                            <label class="flex items-center"><input type="checkbox" id="show-energy-graph" class="form-checkbox"> <span class="ml-2">Gráfica de Energías</span></label>
+                            <!-- Se eliminó el checkbox de la gráfica de energías -->
                         </div>
                     </div>
                 </div>
@@ -231,53 +220,38 @@
         // --- SETUP ---
         const canvas = document.getElementById('simulation-canvas');
         const ctx = canvas.getContext('2d');
-        const energyGraphCanvas = document.getElementById('energy-graph-canvas');
-        const energyGraphCtx = energyGraphCanvas.getContext('2d');
-        const dpr = window.devicePixelRatio || 1;
+        // Se eliminaron energyGraphCanvas y energyGraphCtx
 
         let parent = canvas.parentElement;
         let width, height;
+        const dpr = window.devicePixelRatio || 1; // Se mantiene dpr para el canvas principal
 
         /**
-         * [FUNCIÓN CORREGIDA]
-         * Esta función ahora resetea la transformación del lienzo antes de reescalarlo.
-         * Esto previene errores de escalado acumulativo si la ventana cambia de tamaño varias veces.
+         * Ajusta el tamaño del lienzo principal para que se adapte a su contenedor
+         * y maneja la densidad de píxeles del dispositivo (DPR).
          */
         function resizeCanvas() {
             parent = canvas.parentElement;
             width = parent.clientWidth;
             height = parent.clientHeight;
             
-            // Reset and scale main canvas
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            canvas.width = width * dpr;
-            canvas.height = height * dpr;
-            ctx.scale(dpr, dpr);
-            canvas.style.width = `${width}px`;
-            canvas.style.height = `${height}px`;
+            // Restablecer y escalar el lienzo principal
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // Restablece la transformación a la identidad
+            canvas.width = width * dpr; // Establece el ancho físico del lienzo
+            canvas.height = height * dpr; // Establece el alto físico del lienzo
+            ctx.scale(dpr, dpr); // Escala el contexto para que las unidades de dibujo coincidan con los píxeles CSS
+            canvas.style.width = `${width}px`; // Establece el ancho CSS del lienzo
+            canvas.style.height = `${height}px`; // Establece el alto CSS del lienzo
 
-            const energyGraphParent = energyGraphCanvas.parentElement;
-            if(energyGraphParent) {
-                const graphWidth = energyGraphParent.clientWidth;
-                const graphHeight = energyGraphParent.clientHeight;
-                
-                // Reset and scale graph canvas
-                energyGraphCtx.setTransform(1, 0, 0, 1, 0, 0);
-                energyGraphCanvas.width = graphWidth * dpr;
-                energyGraphCanvas.height = graphHeight * dpr;
-                energyGraphCtx.scale(dpr, dpr);
-                energyGraphCanvas.style.width = `${graphWidth}px`;
-                energyGraphCanvas.style.height = `${graphHeight}px`;
-            }
-
-            updateScale(); // Recalculate scale on resize
+            // Se eliminó la lógica de redimensionamiento para energyGraphCanvas
+            updateScale(); // Recalcular la escala de la simulación al cambiar el tamaño
         }
         
         window.addEventListener('resize', resizeCanvas);
 
         // --- STATE MANAGEMENT ---
         const BASE_PIXELS_PER_METER = 250;
-        const START_Y = 50;
+        const START_Y = 50; // Posición Y inicial del punto de anclaje del muelle
 
         const state = {
             tab1: {
@@ -286,14 +260,15 @@
                 simulationState: 'initial', // 'initial', 'running', 'paused'
                 isDraggingMass: false,
                 showForces: true, showVelocityAccelVectors: false, showNaturalLength: false, showEquilibrium: false,
-                showMovableRef: false, showRuler: false, showChronometer: false, showEnergyGraph: false,
+                showMovableRef: false, showRuler: false, showChronometer: false, showEnergyGraph: false, // Ahora siempre false
                 movableRefY: 300, isDraggingRef: false,
                 ruler: { x: 100, y: 80, width: 60, height: 400, isDragging: false, offsetX: 0, offsetY: 0 },
                 massDrag: { startY: 0, startPos: 0 },
                 pixelsPerMeter: BASE_PIXELS_PER_METER,
                 chronometerTime: 0, chronometerManualPause: false, oscillationCount: 0, lastPosSign: 0,
-                energies: { k: 0, ug: 0, ue: 0, th: 0, total: 0 },
-                initialEnergy: 0, ugRef: 0,
+                // Se eliminaron los datos de energías, ya no son necesarios si no se muestran
+                // energies: { k: 0, ug: 0, ue: 0, th: 0, total: 0 },
+                // initialEnergy: 0, ugRef: 0,
             }
         };
 
@@ -301,22 +276,28 @@
         let startPauseBtn, resetSimulationBtn, chronoContainer, chronoTimeEl, 
             chronoPausePlayBtn, chronoResetBtn, iconPause, iconPlay;
         
+        /**
+         * Establece el estado inicial de las energías.
+         * Se ha modificado para que no calcule ni almacene datos de energía.
+         */
         function setInitialEnergyState() {
-            const s = state.tab1;
-            const equilibriumPos = s.l0 + (s.mass * s.gravity) / s.k;
-            const amplitude = Math.abs(s.position - equilibriumPos);
-            // La referencia de energía potencial gravitatoria se establece en el punto más alto del movimiento inicial
-            s.ugRef = equilibriumPos + amplitude; 
-            
-            s.energies.ug = s.mass * s.gravity * (s.ugRef - s.position);
-            s.energies.ue = 0.5 * s.k * Math.pow(s.position - s.l0, 2);
-            s.energies.k = 0.5 * s.mass * s.velocity * s.velocity;
-            s.initialEnergy = s.energies.ug + s.energies.ue + s.energies.k;
-            s.energies.th = 0; // Energía térmica inicial es 0
-            s.energies.total = s.initialEnergy;
+            // Se eliminó toda la lógica de cálculo de energía
+            // const s = state.tab1;
+            // const equilibriumPos = s.l0 + (s.mass * s.gravity) / s.k;
+            // const amplitude = Math.abs(s.position - equilibriumPos);
+            // s.ugRef = equilibriumPos + amplitude; 
+            // s.energies.ug = s.mass * s.gravity * (s.ugRef - s.position);
+            // s.energies.ue = 0.5 * s.k * Math.pow(s.position - s.l0, 2);
+            // s.energies.k = 0.5 * s.mass * s.velocity * s.velocity;
+            // s.initialEnergy = s.energies.ug + s.energies.ue + s.energies.k;
+            // s.energies.th = 0;
+            // s.energies.total = s.initialEnergy;
         }
 
         // --- EVENT LISTENERS ---
+        /**
+         * Configura todos los listeners de eventos para los controles de la simulación y las interacciones del lienzo.
+         */
         function setupEventListeners() {
             startPauseBtn.addEventListener('click', handleStartPause);
             resetSimulationBtn.addEventListener('click', fullReset);
@@ -347,10 +328,11 @@
                 state.tab1.showChronometer = e.target.checked;
                 chronoContainer.classList.toggle('hidden', !e.target.checked);
             });
-            document.getElementById('show-energy-graph').addEventListener('change', (e) => {
-                state.tab1.showEnergyGraph = e.target.checked;
-                document.getElementById('energy-graph-on-canvas-container').classList.toggle('hidden', !e.target.checked);
-            });
+            // Se eliminó el listener para el checkbox de la gráfica de energías
+            // document.getElementById('show-energy-graph').addEventListener('change', (e) => {
+            //     state.tab1.showEnergyGraph = e.target.checked;
+            //     document.getElementById('energy-graph-on-canvas-container').classList.toggle('hidden', !e.target.checked);
+            // });
             
             chronoPausePlayBtn.addEventListener('click', toggleChronometer);
             chronoResetBtn.addEventListener('click', resetChronometer);
@@ -364,18 +346,30 @@
             canvas.addEventListener('touchend', handleMouseUp);
         }
         
+        /**
+         * Obtiene la posición del evento (ratón o toque) relativa al lienzo.
+         * @param {Event} e - El objeto de evento.
+         * @returns {{x: number, y: number}} Las coordenadas X e Y.
+         */
         function getEventPos(e) {
             const rect = canvas.getBoundingClientRect();
             const touch = e.touches ? e.touches[0] : e;
             return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
         }
 
+        /**
+         * Maneja el evento de presionar el botón del ratón o tocar la pantalla.
+         * Permite arrastrar la masa, la referencia móvil y la regla.
+         * @param {Event} e - El objeto de evento.
+         */
         function handleMouseDown(e) {
             e.preventDefault();
             const { x, y } = getEventPos(e);
             const s = state.tab1;
             const massSize = 25 + Math.sqrt(s.mass) * 12;
             const massY_px = START_Y + s.position * s.pixelsPerMeter;
+            
+            // Comprobar si se está arrastrando la masa
             if (x > width/2 - massSize && x < width/2 + massSize && y > massY_px && y < massY_px + massSize) {
                 s.isDraggingMass = true;
                 s.massDrag.startY = y;
@@ -383,11 +377,13 @@
                 canvas.classList.add('grabbing');
                 return;
             }
+            // Comprobar si se está arrastrando la referencia móvil
             if (s.showMovableRef && Math.abs(y - s.movableRefY) < 15) {
                 s.isDraggingRef = true;
                 canvas.classList.add('grabbing');
                 return;
             }
+            // Comprobar si se está arrastrando la regla
             if (s.showRuler && x > s.ruler.x && x < s.ruler.x + s.ruler.width && y > s.ruler.y && y < s.ruler.y + s.ruler.height) {
                 s.ruler.isDragging = true;
                 s.ruler.offsetX = x - s.ruler.x;
@@ -397,6 +393,11 @@
             }
         }
 
+        /**
+         * Maneja el evento de mover el ratón o el dedo.
+         * Actualiza la posición de los elementos arrastrados.
+         * @param {Event} e - El objeto de evento.
+         */
         function handleMouseMove(e) {
             e.preventDefault();
             const { x, y } = getEventPos(e);
@@ -404,21 +405,26 @@
             if (s.isDraggingMass) {
                 const deltaY = y - s.massDrag.startY;
                 s.position = s.massDrag.startPos + deltaY / s.pixelsPerMeter;
-                s.velocity = 0;
+                s.velocity = 0; // La velocidad se pone a cero al arrastrar
             } else if (s.isDraggingRef) {
                 s.movableRefY = y;
             } else if (s.ruler.isDragging) {
                 s.ruler.x = x - s.ruler.offsetX;
                 s.ruler.y = y - s.ruler.offsetY;
             } else {
-                updateCursor(x, y);
+                updateCursor(x, y); // Actualiza el cursor si no se está arrastrando nada
             }
         }
         
+        /**
+         * Maneja el evento de soltar el botón del ratón o levantar el dedo.
+         * Finaliza el arrastre de elementos.
+         */
         function handleMouseUp() {
             const s = state.tab1;
             if (s.isDraggingMass) {
                 s.isDraggingMass = false;
+                // Si la simulación está en estado inicial o pausada, recalcular energías al soltar la masa
                 if (s.simulationState === 'initial' || s.simulationState === 'paused') {
                     setInitialEnergyState(); 
                 }
@@ -428,6 +434,11 @@
             canvas.classList.remove('grabbing', 'move-cursor', 'grab-cursor');
         }
 
+        /**
+         * Actualiza el estilo del cursor del lienzo según la posición del ratón.
+         * @param {number} x - Coordenada X del ratón.
+         * @param {number} y - Coordenada Y del ratón.
+         */
         function updateCursor(x, y) {
             const s = state.tab1;
             const massSize = 25 + Math.sqrt(s.mass) * 12;
@@ -442,6 +453,9 @@
             }
         }
         
+        /**
+         * Reinicia la simulación a su estado inicial, restableciendo la posición, velocidad y aceleración.
+         */
         function resetSimulation() {
             const s = state.tab1;
             s.simulationState = 'initial';
@@ -456,12 +470,18 @@
             setInitialEnergyState(); // Recalcular energías iniciales
         }
         
+        /**
+         * Realiza un reinicio completo de la simulación, incluyendo la posición de la regla.
+         */
         function fullReset() {
             resetSimulation();
             state.tab1.ruler.x = 100;
             state.tab1.ruler.y = 80;
         }
         
+        /**
+         * Maneja el botón de iniciar/pausar/reanudar la simulación.
+         */
         function handleStartPause() {
             const s = state.tab1;
             if (s.simulationState === 'initial') {
@@ -483,6 +503,9 @@
             }
         }
         
+        /**
+         * Reinicia el cronómetro a cero.
+         */
         function resetChronometer() {
             const s = state.tab1;
             s.chronometerTime = 0;
@@ -490,11 +513,17 @@
             s.lastPosSign = 0;
         }
         
+        /**
+         * Alterna la pausa manual del cronómetro.
+         */
         function toggleChronometer() {
             state.tab1.chronometerManualPause = !state.tab1.chronometerManualPause;
         }
 
         // --- PHYSICS, SCALE & ANIMATION ---
+        /**
+         * Actualiza la escala de píxeles por metro para asegurar que la simulación se ajuste al lienzo.
+         */
         function updateScale() {
             const s = state.tab1;
             // Calcular la amplitud máxima esperada para ajustar la escala
@@ -513,19 +542,23 @@
             }
         }
 
+        /**
+         * Actualiza el estado físico de la simulación (posición, velocidad, aceleración).
+         * Se eliminó el cálculo de energías, ya que la gráfica no se muestra.
+         */
         function updatePhysics() {
             const s = state.tab1;
             
             if (s.simulationState === 'running' && !s.isDraggingMass) {
-                const elongation = s.position - s.l0;
-                const forceGravity = s.mass * s.gravity;
-                const forceElastic = -s.k * elongation;
-                const forceDamping = -s.damping * 100 * s.velocity; // Factor de amortiguamiento ajustado
-                const totalForce = forceGravity + forceElastic + forceDamping;
+                const elongation = s.position - s.l0; // Elongación del muelle
+                const forceGravity = s.mass * s.gravity; // Fuerza de gravedad
+                const forceElastic = -s.k * elongation; // Fuerza elástica (Ley de Hooke)
+                const forceDamping = -s.damping * 100 * s.velocity; // Fuerza de amortiguamiento
+                const totalForce = forceGravity + forceElastic + forceDamping; // Fuerza neta
                 
-                s.acceleration = totalForce / s.mass;
-                s.velocity += s.acceleration / 60.0; // Usar 60 FPS
-                s.position += s.velocity / 60.0;
+                s.acceleration = totalForce / s.mass; // Segunda Ley de Newton
+                s.velocity += s.acceleration / 60.0; // Integración de la velocidad (Euler)
+                s.position += s.velocity / 60.0; // Integración de la posición (Euler)
 
                 // Detener la simulación si la energía es muy baja y está cerca del equilibrio
                 const equilibriumPos = s.l0 + forceGravity / s.k;
@@ -557,33 +590,30 @@
                 s.acceleration = 0; // Sin aceleración si está pausado o arrastrando
             }
             
-            // Actualizar energías
-            const elongation = s.position - s.l0;
-            s.energies.k = 0.5 * s.mass * s.velocity * s.velocity;
-            s.energies.ue = 0.5 * s.k * Math.pow(elongation, 2);
-            if (typeof s.ugRef !== 'undefined') { // Asegurarse de que ugRef esté definido
-                s.energies.ug = s.mass * s.gravity * (s.ugRef - s.position);
-                const currentMechanicalEnergy = s.energies.k + s.energies.ue + s.energies.ug;
-                // La energía térmica es la diferencia entre la energía inicial y la mecánica actual
-                s.energies.th = Math.max(0, s.initialEnergy - currentMechanicalEnergy);
-                s.energies.total = s.energies.k + s.energies.ue + s.energies.ug + s.energies.th;
-            }
+            // Se eliminó la actualización de energías
         }
 
         // --- DRAWING ---
+        /**
+         * Bucle principal de dibujo de la simulación.
+         */
         function draw() {
-            ctx.clearRect(0, 0, width, height);
-            drawTab1();
-            updatePhysics();
-            requestAnimationFrame(draw);
+            ctx.clearRect(0, 0, width, height); // Limpiar el lienzo principal
+            drawTab1(); // Dibujar los elementos de la simulación
+            updatePhysics(); // Actualizar la física para el siguiente fotograma
+            requestAnimationFrame(draw); // Solicitar el siguiente fotograma
         }
 
+        /**
+         * Dibuja todos los elementos visuales de la pestaña 1 de la simulación.
+         */
         function drawTab1() {
             const s = state.tab1;
             if (s.showRuler) drawRuler();
             drawReferenceLines();
             if (s.showChronometer) drawChronometer();
-            if (s.showEnergyGraph) drawEnergyGraph();
+            // Se eliminó la llamada a drawEnergyGraph()
+            // if (s.showEnergyGraph) drawEnergyGraph();
 
             const startX = width / 2;
             // Dibuja el soporte superior
@@ -616,6 +646,14 @@
             }
         }
         
+        /**
+         * Dibuja un muelle en el lienzo.
+         * @param {number} x - Coordenada X del centro del muelle.
+         * @param {number} y - Coordenada Y del inicio del muelle.
+         * @param {number} length - Longitud del muelle en píxeles.
+         * @param {number} coils - Número de espiras del muelle.
+         * @param {number} width - Ancho de las espiras del muelle.
+         */
         function drawSpring(x, y, length, coils, width) {
             if (length <= 0) return;
             const step = length / coils;
@@ -632,6 +670,12 @@
             ctx.stroke();
         }
 
+        /**
+         * Dibuja una masa en el lienzo.
+         * @param {number} x - Coordenada X del centro de la masa.
+         * @param {number} y - Coordenada Y de la parte superior de la masa.
+         * @param {number} mass - Valor de la masa (para determinar el tamaño visual).
+         */
         function drawMass(x, y, mass) {
             const size = 25 + Math.sqrt(mass) * 12; // Tamaño de la masa basado en su valor
             ctx.beginPath();
@@ -643,6 +687,14 @@
             ctx.stroke();
         }
 
+        /**
+         * Dibuja un vector con una etiqueta.
+         * @param {number} startX - Coordenada X de inicio del vector.
+         * @param {number} startY - Coordenada Y de inicio del vector.
+         * @param {number} value - Longitud del vector.
+         * @param {string} color - Color del vector.
+         * @param {string} label - Etiqueta del vector.
+         */
         function drawVector(startX, startY, value, color, label) {
             const arrowLength = value;
             const endY = startY + arrowLength;
@@ -670,6 +722,9 @@
             ctx.fillText(label, startX + 15, startY + arrowLength / 2);
         }
 
+        /**
+         * Dibuja las líneas de referencia (longitud natural, equilibrio, referencia móvil).
+         */
         function drawReferenceLines() {
             const s = state.tab1;
             const ppm = s.pixelsPerMeter;
@@ -687,6 +742,15 @@
             }
         }
         
+        /**
+         * Dibuja una línea discontinua con una etiqueta.
+         * @param {number} x1 - Coordenada X de inicio.
+         * @param {number} y1 - Coordenada Y de inicio.
+         * @param {number} x2 - Coordenada X de fin.
+         * @param {number} y2 - Coordenada Y de fin.
+         * @param {string} color - Color de la línea.
+         * @param {string} label - Etiqueta de la línea.
+         */
         function drawDashedLine(x1, y1, x2, y2, color, label) {
             ctx.save();
             ctx.beginPath();
@@ -704,6 +768,9 @@
             ctx.fillText(label, 10, y1 - 5);
         }
 
+        /**
+         * Dibuja una regla en el lienzo.
+         */
         function drawRuler() {
             const r = state.tab1.ruler;
             const ppm = state.tab1.pixelsPerMeter;
@@ -746,6 +813,9 @@
             ctx.restore();
         }
         
+        /**
+         * Actualiza y dibuja el cronómetro.
+         */
         function drawChronometer() {
             const s = state.tab1;
             chronoTimeEl.textContent = `${s.chronometerTime.toFixed(1)}s`;
@@ -753,64 +823,7 @@
             iconPlay.classList.toggle('hidden', !s.chronometerManualPause);
         }
 
-        /**
-         * [FUNCIÓN CORREGIDA]
-         * El error principal estaba aquí. La función `clearRect` usaba las dimensiones incorrectas,
-         * lo que borraba las barras. Ahora usa las dimensiones físicas del lienzo del gráfico.
-         * También se asegura de que los valores de energía sean no negativos para el dibujo.
-         */
-        function drawEnergyGraph() {
-            const s = state.tab1;
-            // Obtener las dimensiones lógicas (CSS) del canvas para los cálculos de dibujo
-            const w = energyGraphCanvas.clientWidth; 
-            const h = energyGraphCanvas.clientHeight; 
-
-            // *** CORRECCIÓN: Limpiar el lienzo usando las dimensiones físicas correctas ***
-            // energyGraphCanvas.width y .height ya están escaladas por dpr en resizeCanvas
-            energyGraphCtx.clearRect(0, 0, energyGraphCanvas.width, energyGraphCanvas.height);
-
-            const energies = [
-                { label: 'EC', value: s.energies.k, color: '#22c55e' },    // Cinética
-                { label: 'EPE', value: s.energies.ue, color: '#3b82f6' },   // Potencial Elástica
-                { label: 'EPG', value: s.energies.ug, color: '#6366f1' },   // Potencial Gravitatoria
-                { label: 'ET', value: s.energies.th, color: '#ef4444' },    // Térmica (pérdidas)
-                { label: 'Total', value: s.energies.total, color: '#f97316' } // Total
-            ];
-
-            // Encontrar la energía máxima para escalar las barras.
-            // Usar initialEnergy como base si es mayor, para una escala consistente al inicio.
-            // Asegurar que sea al menos 1 para evitar divisiones por cero o escalas minúsculas.
-            const maxEnergy = Math.max(1, s.initialEnergy, ...energies.map(e => Math.abs(e.value))); 
-            
-            const padding = 10; // Espacio alrededor del gráfico
-            const barSpacing = 5; // Espacio entre barras
-            const totalBarsHeight = h - 2 * padding;
-            const barHeight = (totalBarsHeight - (energies.length - 1) * barSpacing) / energies.length;
-            
-            const labelX = 35; // Posición X para las etiquetas
-            const barStartX = 40; // Posición X donde empiezan las barras
-            const maxBarWidth = w - barStartX - padding; // Ancho máximo disponible para las barras
-
-            energyGraphCtx.font = '10px Inter';
-            energyGraphCtx.textAlign = 'right';
-            energyGraphCtx.textBaseline = 'middle';
-
-            energies.forEach((energy, i) => {
-                const y = padding + i * (barHeight + barSpacing);
-                const value = Math.max(0, energy.value); // Asegurar que el valor sea no negativo para el dibujo
-                const barWidth = (value / maxEnergy) * maxBarWidth;
-
-                // Dibuja la etiqueta
-                energyGraphCtx.fillStyle = '#d1d5db';
-                energyGraphCtx.fillText(energy.label, labelX, y + barHeight / 2);
-                
-                // Dibuja la barra
-                energyGraphCtx.fillStyle = energy.color;
-                if (barWidth > 0) { // Solo dibujar si el ancho es positivo
-                    energyGraphCtx.fillRect(barStartX, y, barWidth, barHeight);
-                }
-            });
-        }
+        // Se eliminó la función drawEnergyGraph()
 
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {

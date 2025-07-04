@@ -12,7 +12,7 @@
     <style>
         html, body {
             height: 100%;
-            overflow: hidden; /* Evita el scroll en el body en desktop */
+            overflow: hidden; /* Evita el scroll en el body */
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -99,6 +99,7 @@
             display: flex;
             flex-direction: row;
             height: 100vh;
+            position: relative; /* Contexto para la gráfica flotante */
         }
         .simulation-column {
             flex-grow: 1;
@@ -129,18 +130,20 @@
         
         #energy-chart-overlay {
             position: absolute;
-            bottom: 15px;
-            left: 15px;
-            width: 380px;
-            height: 200px;
+            /* **CAMBIO**: Tamaño más grande por defecto para PC */
+            width: 420px;
+            height: 220px;
             background-color: rgba(31, 41, 55, 0.85);
             border: 1px solid #4b5563;
             border-radius: 0.5rem;
             padding: 0.75rem;
-            z-index: 10;
+            z-index: 30; /* Z-index alto para que esté por encima de todo */
             display: flex;
             flex-direction: column;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            /* **CAMBIO**: Posición inicial */
+            bottom: 15px;
+            left: 15px;
         }
         #energy-chart-overlay.hidden {
             display: none;
@@ -173,32 +176,30 @@
             text-decoration: underline;
         }
 
-        /* **NUEVO**: Estilos responsivos para móviles */
+        /* **CAMBIO**: Estilos responsivos mejorados */
         @media (max-width: 768px) {
             html, body {
-                height: auto;
-                overflow: visible; /* Permitir scroll en móvil */
+                height: 100vh; /* Ocupar toda la altura */
+                overflow: hidden; /* Evitar scroll en el body */
             }
             .main-container {
                 flex-direction: column;
-                height: auto;
+                height: 100%;
             }
             .simulation-column {
-                height: 50vh; /* La simulación ocupa la mitad superior */
-                min-height: 350px; /* Altura mínima para ser usable */
+                height: 50%; /* La simulación ocupa la mitad superior */
+                flex-shrink: 0;
             }
             .controls-column {
                 width: 100%;
-                height: auto; /* La altura se ajusta al contenido */
+                height: 50%; /* Los controles ocupan la mitad inferior */
                 border-left: none;
-                border-top: 2px solid #374151; /* Separador superior */
+                border-top: 2px solid #374151;
             }
             #energy-chart-overlay {
                 width: 90%;
                 max-width: 320px;
                 height: 180px;
-                left: 10px;
-                bottom: 10px;
             }
         }
     </style>
@@ -219,12 +220,6 @@
                 <button id="chrono-reset-btn" title="Reiniciar Cronómetro">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 4c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm-1-8v4h2v-4h-2z"></path></svg>
                 </button>
-            </div>
-            <div id="energy-chart-overlay" class="hidden">
-                <h3 class="chart-header">Gráfica de Energías (J)</h3>
-                <div id="energy-chart-container">
-                    <canvas id="energy-chart"></canvas>
-                </div>
             </div>
         </div>
 
@@ -294,6 +289,14 @@
             </div>
             <div class="attribution">
                 <a href="https://aulaquest.com" target="_blank" rel="noopener noreferrer">Simulación por aulaquest.com</a>
+            </div>
+        </div>
+        
+        <!-- **CAMBIO**: Gráfica movida fuera de las columnas para que pueda "flotar" libremente -->
+        <div id="energy-chart-overlay" class="hidden">
+            <h3 class="chart-header">Gráfica de Energías (J)</h3>
+            <div id="energy-chart-container">
+                <canvas id="energy-chart"></canvas>
             </div>
         </div>
     </div>
@@ -887,8 +890,10 @@
             function onMouseDown(e) {
                 isDragging = true;
                 const eventPos = e.touches ? e.touches[0] : e;
-                offsetX = eventPos.clientX - energyChartOverlay.offsetLeft;
-                offsetY = eventPos.clientY - energyChartOverlay.offsetTop;
+                // **CAMBIO**: Usar las coordenadas relativas al viewport para el offset
+                const rect = energyChartOverlay.getBoundingClientRect();
+                offsetX = eventPos.clientX - rect.left;
+                offsetY = eventPos.clientY - rect.top;
                 
                 window.addEventListener('mousemove', onMouseMove);
                 window.addEventListener('mouseup', onMouseUp);
@@ -903,13 +908,15 @@
                 let newLeft = eventPos.clientX - offsetX;
                 let newTop = eventPos.clientY - offsetY;
 
-                const parentRect = energyChartOverlay.parentElement.getBoundingClientRect();
+                // **CAMBIO**: Limitar el arrastre al viewport completo (document.body)
+                const parentRect = document.body.getBoundingClientRect();
                 newLeft = Math.max(0, Math.min(newLeft, parentRect.width - energyChartOverlay.offsetWidth));
                 newTop = Math.max(0, Math.min(newTop, parentRect.height - energyChartOverlay.offsetHeight));
 
                 energyChartOverlay.style.left = `${newLeft}px`;
                 energyChartOverlay.style.top = `${newTop}px`;
                 energyChartOverlay.style.bottom = 'auto';
+                energyChartOverlay.style.right = 'auto';
             }
 
             function onMouseUp() {

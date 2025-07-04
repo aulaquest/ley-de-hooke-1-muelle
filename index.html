@@ -12,7 +12,7 @@
     <style>
         html, body {
             height: 100%;
-            overflow: hidden; /* Evita el scroll en el body */
+            overflow: hidden; /* Evita el scroll en el body en desktop */
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -152,8 +152,8 @@
             color: #e5e7eb;
             text-align: center;
             padding: 4px;
-            cursor: move; /* **NUEVO**: Cursor para indicar que es arrastrable */
-            user-select: none; /* Evitar selección de texto al arrastrar */
+            cursor: move;
+            user-select: none;
         }
         #energy-chart-container {
             flex-grow: 1;
@@ -163,14 +163,43 @@
             padding: 1rem 1.5rem;
             text-align: center;
             font-size: 0.875rem;
-            color: #6b7280; /* text-gray-500 */
+            color: #6b7280;
         }
         .attribution a {
-            color: #9ca3af; /* text-gray-400 */
+            color: #9ca3af;
             text-decoration: none;
         }
         .attribution a:hover {
             text-decoration: underline;
+        }
+
+        /* **NUEVO**: Estilos responsivos para móviles */
+        @media (max-width: 768px) {
+            html, body {
+                height: auto;
+                overflow: visible; /* Permitir scroll en móvil */
+            }
+            .main-container {
+                flex-direction: column;
+                height: auto;
+            }
+            .simulation-column {
+                height: 50vh; /* La simulación ocupa la mitad superior */
+                min-height: 350px; /* Altura mínima para ser usable */
+            }
+            .controls-column {
+                width: 100%;
+                height: auto; /* La altura se ajusta al contenido */
+                border-left: none;
+                border-top: 2px solid #374151; /* Separador superior */
+            }
+            #energy-chart-overlay {
+                width: 90%;
+                max-width: 320px;
+                height: 180px;
+                left: 10px;
+                bottom: 10px;
+            }
         }
     </style>
 </head>
@@ -263,7 +292,6 @@
                     </div>
                 </div>
             </div>
-            <!-- **NUEVO**: Enlace de atribución -->
             <div class="attribution">
                 <a href="https://aulaquest.com" target="_blank" rel="noopener noreferrer">Simulación por aulaquest.com</a>
             </div>
@@ -309,7 +337,7 @@
                 simulationState: 'initial',
                 isDraggingMass: false,
                 showForces: true, showVelocityAccelVectors: false, showNaturalLength: false, showEquilibrium: true,
-                showMovableRef: false, showRuler: false, showChronometer: false, showEnergyGraph: false, // **CAMBIO**: Gráfica oculta por defecto
+                showMovableRef: false, showRuler: false, showChronometer: false, showEnergyGraph: false,
                 movableRefY: 300, isDraggingRef: false,
                 ruler: { x: 100, y: 80, width: 60, height: 400, isDragging: false, offsetX: 0, offsetY: 0 },
                 massDrag: { startY: 0, startPos: 0 },
@@ -368,7 +396,6 @@
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                             // **CAMBIO**: Animación de tooltip desactivada para aparición instantánea
                              animation: false,
                              callbacks: {
                                 label: function(context) {
@@ -382,7 +409,6 @@
                             }
                         }
                     },
-                    // **CAMBIO**: Desactivar animación de redibujado de la gráfica
                     animation: false,
                 }
             });
@@ -440,7 +466,7 @@
             canvas.addEventListener('touchmove', handleMouseMove, { passive: false });
             canvas.addEventListener('touchend', handleMouseUp);
 
-            setupChartDrag(); // **NUEVO**: Activar la funcionalidad de arrastre
+            setupChartDrag();
         }
         
         function getEventPos(e) {
@@ -853,7 +879,6 @@
             energyChart.update('none');
         }
 
-        // **NUEVO**: Lógica para arrastrar la gráfica de energía
         function setupChartDrag() {
             const chartHeader = document.querySelector('.chart-header');
             let isDragging = false;
@@ -865,7 +890,6 @@
                 offsetX = eventPos.clientX - energyChartOverlay.offsetLeft;
                 offsetY = eventPos.clientY - energyChartOverlay.offsetTop;
                 
-                // Añadir listeners a window para un arrastre fluido
                 window.addEventListener('mousemove', onMouseMove);
                 window.addEventListener('mouseup', onMouseUp);
                 window.addEventListener('touchmove', onMouseMove, { passive: false });
@@ -874,24 +898,22 @@
 
             function onMouseMove(e) {
                 if (!isDragging) return;
-                e.preventDefault(); // Prevenir scroll en móviles
+                e.preventDefault();
                 const eventPos = e.touches ? e.touches[0] : e;
                 let newLeft = eventPos.clientX - offsetX;
                 let newTop = eventPos.clientY - offsetY;
 
-                // Limitar el arrastre dentro de la ventana de simulación
                 const parentRect = energyChartOverlay.parentElement.getBoundingClientRect();
                 newLeft = Math.max(0, Math.min(newLeft, parentRect.width - energyChartOverlay.offsetWidth));
                 newTop = Math.max(0, Math.min(newTop, parentRect.height - energyChartOverlay.offsetHeight));
 
                 energyChartOverlay.style.left = `${newLeft}px`;
                 energyChartOverlay.style.top = `${newTop}px`;
-                energyChartOverlay.style.bottom = 'auto'; // Sobrescribir el 'bottom' inicial
+                energyChartOverlay.style.bottom = 'auto';
             }
 
             function onMouseUp() {
                 isDragging = false;
-                // Limpiar listeners de window
                 window.removeEventListener('mousemove', onMouseMove);
                 window.removeEventListener('mouseup', onMouseUp);
                 window.removeEventListener('touchmove', onMouseMove);

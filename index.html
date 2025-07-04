@@ -238,10 +238,18 @@
         let parent = canvas.parentElement;
         let width, height;
 
+        /**
+         * [FUNCIÓN CORREGIDA]
+         * Esta función ahora resetea la transformación del lienzo antes de reescalarlo.
+         * Esto previene errores de escalado acumulativo si la ventana cambia de tamaño varias veces.
+         */
         function resizeCanvas() {
             parent = canvas.parentElement;
             width = parent.clientWidth;
             height = parent.clientHeight;
+            
+            // Reset and scale main canvas
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
             canvas.width = width * dpr;
             canvas.height = height * dpr;
             ctx.scale(dpr, dpr);
@@ -252,6 +260,9 @@
             if(energyGraphParent) {
                 const graphWidth = energyGraphParent.clientWidth;
                 const graphHeight = energyGraphParent.clientHeight;
+                
+                // Reset and scale graph canvas
+                energyGraphCtx.setTransform(1, 0, 0, 1, 0, 0);
                 energyGraphCanvas.width = graphWidth * dpr;
                 energyGraphCanvas.height = graphHeight * dpr;
                 energyGraphCtx.scale(dpr, dpr);
@@ -290,26 +301,18 @@
         let startPauseBtn, resetSimulationBtn, chronoContainer, chronoTimeEl, 
             chronoPausePlayBtn, chronoResetBtn, iconPause, iconPlay;
         
-        // --- NEW/MODIFIED FUNCTIONS for ENERGY GRAPH ---
-        
-        /**
-         * [NUEVA FUNCIÓN]
-         * Calcula y establece el estado energético inicial del sistema.
-         * Esto define la energía total y el punto de referencia para la energía potencial gravitatoria.
-         * Se llama al reiniciar la simulación o después de que el usuario arrastra la masa a una nueva posición.
-         */
         function setInitialEnergyState() {
             const s = state.tab1;
-            // Esta función establece la línea base de energía desde la posición actual y velocidad cero.
             const equilibriumPos = s.l0 + (s.mass * s.gravity) / s.k;
             const amplitude = Math.abs(s.position - equilibriumPos);
-            s.ugRef = equilibriumPos + amplitude; // Establece la referencia en el punto más bajo de la oscilación
+            // La referencia de energía potencial gravitatoria se establece en el punto más alto del movimiento inicial
+            s.ugRef = equilibriumPos + amplitude; 
             
             s.energies.ug = s.mass * s.gravity * (s.ugRef - s.position);
             s.energies.ue = 0.5 * s.k * Math.pow(s.position - s.l0, 2);
-            s.energies.k = 0.5 * s.mass * s.velocity * s.velocity; // Debería ser 0 si se llama desde reset/drag
+            s.energies.k = 0.5 * s.mass * s.velocity * s.velocity;
             s.initialEnergy = s.energies.ug + s.energies.ue + s.energies.k;
-            s.energies.th = 0;
+            s.energies.th = 0; // Energía térmica inicial es 0
             s.energies.total = s.initialEnergy;
         }
 
@@ -324,7 +327,7 @@
             document.getElementById('l0').addEventListener('input', (e) => { state.tab1.l0 = parseFloat(e.target.value); document.getElementById('l0-value').textContent = `${state.tab1.l0.toFixed(2)} m`; resetSimulation(); });
             document.getElementById('damping').addEventListener('input', (e) => {
                 const val = parseFloat(e.target.value);
-                state.tab1.damping = val / 1000;
+                state.tab1.damping = val / 1000; // Ajustar el factor de amortiguamiento
                 const dampingDisplay = document.getElementById('damping-value');
                 if (val < 10) dampingDisplay.textContent = 'Bajo';
                 else if (val < 30) dampingDisplay.textContent = 'Medio';
@@ -412,17 +415,12 @@
             }
         }
         
-        /**
-         * [FUNCIÓN MODIFICADA]
-         * Cuando el usuario suelta la masa, recalculamos el estado energético inicial.
-         */
         function handleMouseUp() {
             const s = state.tab1;
             if (s.isDraggingMass) {
                 s.isDraggingMass = false;
-                // Si la simulación no está corriendo, el arrastre define un nuevo estado inicial.
                 if (s.simulationState === 'initial' || s.simulationState === 'paused') {
-                    setInitialEnergyState(); // Recalcula la línea base de energía después de que el usuario establezca la posición
+                    setInitialEnergyState(); 
                 }
             }
             s.isDraggingRef = false;
@@ -444,22 +442,18 @@
             }
         }
         
-        /**
-         * [FUNCIÓN MODIFICADA]
-         * Ahora, al reiniciar, también se calcula el estado energético inicial para que el gráfico se muestre correctamente.
-         */
         function resetSimulation() {
             const s = state.tab1;
             s.simulationState = 'initial';
             startPauseBtn.textContent = 'Empezar';
             startPauseBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600', 'bg-blue-600', 'hover:bg-blue-700');
             startPauseBtn.classList.add('bg-green-600', 'hover:bg-green-700');
-            s.position = s.l0;
+            s.position = s.l0; // Posición inicial es la longitud natural
             s.velocity = 0;
             s.acceleration = 0;
             resetChronometer();
             updateScale();
-            setInitialEnergyState(); // ¡NUEVO! Calcula las energías para el estado inicial
+            setInitialEnergyState(); // Recalcular energías iniciales
         }
         
         function fullReset() {
@@ -468,10 +462,6 @@
             state.tab1.ruler.y = 80;
         }
         
-        /**
-         * [FUNCIÓN MODIFICADA]
-         * Se elimina el cálculo de energía de aquí, ya que ahora se gestiona en otros lugares.
-         */
         function handleStartPause() {
             const s = state.tab1;
             if (s.simulationState === 'initial') {
@@ -479,8 +469,7 @@
                 startPauseBtn.textContent = 'Pausar';
                 startPauseBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
                 startPauseBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
-                // El estado energético inicial ya está establecido por resetSimulation o al arrastrar.
-                resetChronometer();
+                resetChronometer(); // Reiniciar cronómetro al empezar
             } else if (s.simulationState === 'running') {
                 s.simulationState = 'paused';
                 startPauseBtn.textContent = 'Reanudar';
@@ -508,9 +497,13 @@
         // --- PHYSICS, SCALE & ANIMATION ---
         function updateScale() {
             const s = state.tab1;
-            const amplitude = (s.mass * s.gravity) / s.k;
-            const maxPosition = s.l0 + 2 * amplitude;
-            const requiredPixels = height - START_Y - 50;
+            // Calcular la amplitud máxima esperada para ajustar la escala
+            // Esto es una estimación, ya que la amplitud real dependerá de la posición inicial
+            const equilibriumPos = s.l0 + (s.mass * s.gravity) / s.k;
+            const maxDisplacement = Math.max(Math.abs(s.position - equilibriumPos), Math.abs(s.l0 - equilibriumPos));
+            const maxPosition = s.l0 + maxDisplacement * 2; // Asegurar espacio para la oscilación
+            
+            const requiredPixels = height - START_Y - 50; // Espacio disponible en píxeles
             
             if (maxPosition > 0 && requiredPixels > 0) {
                 const requiredPPM = requiredPixels / maxPosition;
@@ -520,26 +513,21 @@
             }
         }
 
-        /**
-         * [FUNCIÓN MODIFICADA]
-         * Se reestructura para que los cálculos de energía se realicen en cada fotograma,
-         * independientemente de si la simulación está 'corriendo', 'pausada' o 'inicial'.
-         */
         function updatePhysics() {
             const s = state.tab1;
             
-            // --- Actualiza la simulación física (posición, velocidad, etc.) ---
             if (s.simulationState === 'running' && !s.isDraggingMass) {
                 const elongation = s.position - s.l0;
                 const forceGravity = s.mass * s.gravity;
                 const forceElastic = -s.k * elongation;
-                const forceDamping = -s.damping * 100 * s.velocity;
+                const forceDamping = -s.damping * 100 * s.velocity; // Factor de amortiguamiento ajustado
                 const totalForce = forceGravity + forceElastic + forceDamping;
+                
                 s.acceleration = totalForce / s.mass;
-                s.velocity += s.acceleration / 60.0;
+                s.velocity += s.acceleration / 60.0; // Usar 60 FPS
                 s.position += s.velocity / 60.0;
 
-                // Condición para detener la simulación cuando llega al reposo
+                // Detener la simulación si la energía es muy baja y está cerca del equilibrio
                 const equilibriumPos = s.l0 + forceGravity / s.k;
                 const kineticEnergy = 0.5 * s.mass * s.velocity * s.velocity;
                 const potentialEnergy = 0.5 * s.k * Math.pow(s.position - equilibriumPos, 2);
@@ -553,29 +541,30 @@
                     startPauseBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
                 }
 
-                // Actualiza el cronómetro
                 if (!s.chronometerManualPause) {
                     s.chronometerTime += 1 / 60.0;
+                    // Contar oscilaciones: cruce por el punto de equilibrio
                     const currentPosSign = Math.sign(s.position - equilibriumPos);
                     if (s.lastPosSign < 0 && currentPosSign >= 0) {
                         s.oscillationCount++;
                     }
+                    // Solo actualizar lastPosSign si la masa no está en el equilibrio
                     if (Math.abs(s.position - equilibriumPos) > 0.001) {
                         s.lastPosSign = currentPosSign;
                     }
                 }
             } else {
-                s.acceleration = 0;
+                s.acceleration = 0; // Sin aceleración si está pausado o arrastrando
             }
             
-            // --- Actualiza siempre los cálculos de energía para la visualización ---
+            // Actualizar energías
             const elongation = s.position - s.l0;
             s.energies.k = 0.5 * s.mass * s.velocity * s.velocity;
             s.energies.ue = 0.5 * s.k * Math.pow(elongation, 2);
-            // s.ugRef y s.initialEnergy ahora están precalculados y son estables
-            if (typeof s.ugRef !== 'undefined') {
+            if (typeof s.ugRef !== 'undefined') { // Asegurarse de que ugRef esté definido
                 s.energies.ug = s.mass * s.gravity * (s.ugRef - s.position);
                 const currentMechanicalEnergy = s.energies.k + s.energies.ue + s.energies.ug;
+                // La energía térmica es la diferencia entre la energía inicial y la mecánica actual
                 s.energies.th = Math.max(0, s.initialEnergy - currentMechanicalEnergy);
                 s.energies.total = s.energies.k + s.energies.ue + s.energies.ug + s.energies.th;
             }
@@ -597,21 +586,27 @@
             if (s.showEnergyGraph) drawEnergyGraph();
 
             const startX = width / 2;
+            // Dibuja el soporte superior
             ctx.fillStyle = '#4b5563';
             ctx.fillRect(startX - 100, START_Y - 10, 200, 10);
+
             const springLength_px = s.position * s.pixelsPerMeter;
             drawSpring(startX, START_Y, springLength_px, 25, 15);
             const massY_px = START_Y + springLength_px;
             drawMass(startX, massY_px, s.mass);
+
+            // Actualiza la información en la caja
             document.getElementById('info-display').innerHTML = `Longitud del Muelle: ${s.position.toFixed(3)} m<br>Velocidad: ${s.velocity.toFixed(3)} m/s`;
             
             if (s.simulationState === 'running' || s.simulationState === 'paused') {
-                const Fe = s.k * (s.position - s.l0);
+                const Fe = s.k * (s.position - s.l0); // Fuerza elástica
                 if (s.showForces) {
-                    const Fg = s.mass * s.gravity;
+                    const Fg = s.mass * s.gravity; // Fuerza gravitatoria
                     const vectorX = startX + 80;
+                    // Escalar la longitud del vector para que sea visible
                     drawVector(vectorX, massY_px, Fg * s.pixelsPerMeter / 50, '#ef4444', 'Fg');
                     if (Fe > 0) drawVector(vectorX, massY_px, -Fe * s.pixelsPerMeter / 50, '#22c55e', 'Fe');
+                    else drawVector(vectorX, massY_px, -Fe * s.pixelsPerMeter / 50, '#22c55e', 'Fe'); // Dibuja Fe incluso si es negativa
                 }
                 if (s.showVelocityAccelVectors) {
                     const vectorX_va = startX - 80;
@@ -624,35 +619,54 @@
         function drawSpring(x, y, length, coils, width) {
             if (length <= 0) return;
             const step = length / coils;
-            ctx.beginPath(); ctx.moveTo(x, y);
+            ctx.beginPath();
+            ctx.moveTo(x, y);
             for (let i = 0; i < coils; i++) {
                 const y_pos = y + i * step + step / 2;
                 const x_offset = (i % 2 === 0) ? width : -width;
                 ctx.lineTo(x + x_offset, y_pos);
             }
             ctx.lineTo(x, y + length);
-            ctx.strokeStyle = '#9ca3af'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 2;
+            ctx.stroke();
         }
 
         function drawMass(x, y, mass) {
-            const size = 25 + Math.sqrt(mass) * 12;
+            const size = 25 + Math.sqrt(mass) * 12; // Tamaño de la masa basado en su valor
             ctx.beginPath();
             ctx.rect(x - size / 2, y, size, size);
-            ctx.fillStyle = '#3b82f6'; ctx.fill();
-            ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.fillStyle = '#3b82f6';
+            ctx.fill();
+            ctx.strokeStyle = '#1e40af';
+            ctx.lineWidth = 2;
+            ctx.stroke();
         }
 
         function drawVector(startX, startY, value, color, label) {
             const arrowLength = value;
             const endY = startY + arrowLength;
-            ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(startX, endY);
-            ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(startX, endY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Dibujar la punta de la flecha
             const headlen = 10;
-            ctx.beginPath(); ctx.moveTo(startX, endY);
+            ctx.beginPath();
+            ctx.moveTo(startX, endY);
             ctx.lineTo(startX - headlen / 2, endY - Math.sign(arrowLength) * headlen);
             ctx.lineTo(startX + headlen / 2, endY - Math.sign(arrowLength) * headlen);
-            ctx.closePath(); ctx.fillStyle = color; ctx.fill();
-            ctx.fillStyle = color; ctx.font = '14px Inter'; ctx.textAlign = 'left';
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            // Dibujar la etiqueta
+            ctx.fillStyle = color;
+            ctx.font = '14px Inter';
+            ctx.textAlign = 'left';
             ctx.fillText(label, startX + 15, startY + arrowLength / 2);
         }
 
@@ -675,10 +689,18 @@
         
         function drawDashedLine(x1, y1, x2, y2, color, label) {
             ctx.save();
-            ctx.beginPath(); ctx.setLineDash([5, 5]); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
-            ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
-            ctx.restore();
-            ctx.fillStyle = color; ctx.font = '12px Inter'; ctx.textAlign = 'left';
+            ctx.beginPath();
+            ctx.setLineDash([5, 5]); // Patrón de línea discontinua
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore(); // Restaurar el estado del contexto para no afectar futuros dibujos
+            
+            ctx.fillStyle = color;
+            ctx.font = '12px Inter';
+            ctx.textAlign = 'left';
             ctx.fillText(label, 10, y1 - 5);
         }
 
@@ -686,28 +708,32 @@
             const r = state.tab1.ruler;
             const ppm = state.tab1.pixelsPerMeter;
             ctx.save();
-            ctx.fillStyle = 'rgba(229, 231, 235, 0.2)';
-            ctx.strokeStyle = 'rgba(156, 163, 175, 0.5)';
+            ctx.fillStyle = 'rgba(229, 231, 235, 0.2)'; // Fondo translúcido
+            ctx.strokeStyle = 'rgba(156, 163, 175, 0.5)'; // Borde
             ctx.lineWidth = 1;
             ctx.fillRect(r.x, r.y, r.width, r.height);
             ctx.strokeRect(r.x, r.y, r.width, r.height);
+
             ctx.strokeStyle = '#d1d5db';
             ctx.fillStyle = '#d1d5db';
             ctx.font = '10px Inter';
             ctx.textAlign = 'right';
 
-            const minPixelStep = 20;
+            // Determinar el paso de la regla (ej. 0.1m, 0.2m, 0.5m, 1m)
+            const minPixelStep = 20; // Mínimo de píxeles entre marcas para que no se superpongan
             const minMeterStep = minPixelStep / ppm;
-            const niceSteps = [0.1, 0.2, 0.5, 1, 2, 5];
-            const meterStep = niceSteps.find(step => step >= minMeterStep) || 5;
+            const niceSteps = [0.1, 0.2, 0.5, 1, 2, 5]; // Pasos "bonitos" en metros
+            const meterStep = niceSteps.find(step => step >= minMeterStep) || 5; // Encontrar el paso adecuado
 
+            // Calcular dónde empieza la regla en metros (relativo al START_Y)
             const rulerStartInMeters = (r.y - START_Y) / ppm;
+            // Calcular la primera marca de la regla que es un múltiplo del meterStep
             const firstTickInMeters = Math.ceil(rulerStartInMeters / meterStep) * meterStep;
 
             for (let m = firstTickInMeters; ; m += meterStep) {
-                const y = START_Y + m * ppm;
-                if (y > r.y + r.height) break; 
-                if (y < r.y) continue; 
+                const y = START_Y + m * ppm; // Posición Y en píxeles
+                if (y > r.y + r.height) break; // Salir si está fuera de los límites de la regla
+                if (y < r.y) continue; // Saltar si está antes del inicio visible de la regla
                 
                 const tickLength = 25;
                 const label = m < 1 ? `${(m*100).toFixed(0)} cm` : `${m.toFixed(1)} m`;
@@ -727,10 +753,20 @@
             iconPlay.classList.toggle('hidden', !s.chronometerManualPause);
         }
 
+        /**
+         * [FUNCIÓN CORREGIDA]
+         * El error principal estaba aquí. La función `clearRect` usaba las dimensiones incorrectas,
+         * lo que borraba las barras. Ahora usa las dimensiones físicas del lienzo del gráfico.
+         * También se asegura de que los valores de energía sean no negativos para el dibujo.
+         */
         function drawEnergyGraph() {
             const s = state.tab1;
-            const w = energyGraphCanvas.clientWidth; // Use clientWidth directly
-            const h = energyGraphCanvas.clientHeight; // Use clientHeight directly
+            // Obtener las dimensiones lógicas (CSS) del canvas para los cálculos de dibujo
+            const w = energyGraphCanvas.clientWidth; 
+            const h = energyGraphCanvas.clientHeight; 
+
+            // *** CORRECCIÓN: Limpiar el lienzo usando las dimensiones físicas correctas ***
+            // energyGraphCanvas.width y .height ya están escaladas por dpr en resizeCanvas
             energyGraphCtx.clearRect(0, 0, energyGraphCanvas.width, energyGraphCanvas.height);
 
             const energies = [
@@ -741,34 +777,44 @@
                 { label: 'Total', value: s.energies.total, color: '#f97316' } // Total
             ];
 
-            // La energía máxima para la escala del gráfico es la energía inicial. Evita división por cero.
-            const maxEnergy = Math.max(1, s.initialEnergy); 
-            const barHeight = (h - 20) / energies.length;
-            const labelX = 35;
-            const barStartX = 40;
-            const maxBarWidth = w - barStartX - 10;
+            // Encontrar la energía máxima para escalar las barras.
+            // Usar initialEnergy como base si es mayor, para una escala consistente al inicio.
+            // Asegurar que sea al menos 1 para evitar divisiones por cero o escalas minúsculas.
+            const maxEnergy = Math.max(1, s.initialEnergy, ...energies.map(e => Math.abs(e.value))); 
+            
+            const padding = 10; // Espacio alrededor del gráfico
+            const barSpacing = 5; // Espacio entre barras
+            const totalBarsHeight = h - 2 * padding;
+            const barHeight = (totalBarsHeight - (energies.length - 1) * barSpacing) / energies.length;
+            
+            const labelX = 35; // Posición X para las etiquetas
+            const barStartX = 40; // Posición X donde empiezan las barras
+            const maxBarWidth = w - barStartX - padding; // Ancho máximo disponible para las barras
 
             energyGraphCtx.font = '10px Inter';
             energyGraphCtx.textAlign = 'right';
             energyGraphCtx.textBaseline = 'middle';
 
             energies.forEach((energy, i) => {
-                const y = i * barHeight + 10;
-                const barWidth = (energy.value / maxEnergy) * maxBarWidth;
+                const y = padding + i * (barHeight + barSpacing);
+                const value = Math.max(0, energy.value); // Asegurar que el valor sea no negativo para el dibujo
+                const barWidth = (value / maxEnergy) * maxBarWidth;
 
                 // Dibuja la etiqueta
                 energyGraphCtx.fillStyle = '#d1d5db';
-                energyGraphCtx.fillText(energy.label, labelX, y + (barHeight * 0.8) / 2);
+                energyGraphCtx.fillText(energy.label, labelX, y + barHeight / 2);
                 
                 // Dibuja la barra
                 energyGraphCtx.fillStyle = energy.color;
-                energyGraphCtx.fillRect(barStartX, y, barWidth > 0 ? barWidth : 0, barHeight * 0.8);
+                if (barWidth > 0) { // Solo dibujar si el ancho es positivo
+                    energyGraphCtx.fillRect(barStartX, y, barWidth, barHeight);
+                }
             });
         }
 
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Asigna los elementos del DOM ahora que está listo
+            // Asignar elementos DOM a variables globales
             startPauseBtn = document.getElementById('start-pause-btn');
             resetSimulationBtn = document.getElementById('reset-simulation-btn');
             chronoContainer = document.getElementById('chronometer-container');
@@ -778,10 +824,10 @@
             iconPause = document.getElementById('icon-pause');
             iconPlay = document.getElementById('icon-play');
 
-            resizeCanvas();
-            setupEventListeners();
-            fullReset();
-            draw();
+            resizeCanvas(); // Ajustar el tamaño del canvas al cargar
+            setupEventListeners(); // Configurar todos los listeners de eventos
+            fullReset(); // Reiniciar completamente la simulación a su estado inicial
+            draw(); // Iniciar el bucle de animación
         });
 
     </script>

@@ -130,18 +130,16 @@
         
         #energy-chart-overlay {
             position: absolute;
-            /* **CAMBIO**: Tamaño más grande por defecto para PC */
             width: 420px;
             height: 220px;
             background-color: rgba(31, 41, 55, 0.85);
             border: 1px solid #4b5563;
             border-radius: 0.5rem;
             padding: 0.75rem;
-            z-index: 30; /* Z-index alto para que esté por encima de todo */
+            z-index: 30;
             display: flex;
             flex-direction: column;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            /* **CAMBIO**: Posición inicial */
             bottom: 15px;
             left: 15px;
         }
@@ -176,30 +174,47 @@
             text-decoration: underline;
         }
 
-        /* **CAMBIO**: Estilos responsivos mejorados */
+        /* **CAMBIO**: Estilos responsivos para vista lado a lado en móvil */
         @media (max-width: 768px) {
             html, body {
-                height: 100vh; /* Ocupar toda la altura */
-                overflow: hidden; /* Evitar scroll en el body */
+                height: 100vh;
+                overflow: hidden;
             }
             .main-container {
-                flex-direction: column;
+                flex-direction: row; /* Mantiene la dirección de fila como en PC */
                 height: 100%;
             }
             .simulation-column {
-                height: 50%; /* La simulación ocupa la mitad superior */
-                flex-shrink: 0;
+                flex-grow: 1; /* Permite que la simulación ocupe el espacio sobrante */
+                height: 100%; /* Ocupa toda la altura */
+                min-width: 120px; /* Evita que se colapse en pantallas muy estrechas */
             }
             .controls-column {
-                width: 100%;
-                height: 50%; /* Los controles ocupan la mitad inferior */
-                border-left: none;
-                border-top: 2px solid #374151;
+                width: 280px; /* Ancho fijo más estrecho para el panel de control */
+                flex-shrink: 0; /* Evita que el panel se encoja */
+                height: 100%; /* Ocupa toda la altura */
+                border-top: none; /* Elimina el borde superior que ya no es necesario */
+                border-left: 1px solid #374151; /* Restaura el borde izquierdo */
+            }
+            .controls-scroll-area {
+                padding: 1rem; /* Reduce un poco el padding para más espacio */
+            }
+            .attribution {
+                padding: 0.5rem 1rem; /* Reduce el padding de la atribución */
+            }
+            header .text-3xl {
+                font-size: 1.5rem; /* Reduce el tamaño del título principal */
+            }
+             header .text-md {
+                font-size: 0.875rem; /* Reduce el tamaño del subtítulo */
             }
             #energy-chart-overlay {
-                width: 90%;
-                max-width: 320px;
-                height: 180px;
+                /* Ajusta el tamaño y posición de la gráfica para que no estorbe */
+                width: 85%;
+                max-width: 250px;
+                height: 160px;
+                left: 10px;
+                bottom: 10px;
             }
         }
     </style>
@@ -227,8 +242,7 @@
         <div class="controls-column">
             <div class="controls-scroll-area">
                 <header class="text-center mb-6">
-                    <h1 class="text-2xl md:text-3xl font-bold text-white">Simulador de Muelles</h1>
-                    <p class="text-md text-gray-400 mt-1">Ley de Hooke y Oscilaciones</p>
+                    
                 </header>
 
                 <div id="controls-tab1">
@@ -292,7 +306,7 @@
             </div>
         </div>
         
-        <!-- **CAMBIO**: Gráfica movida fuera de las columnas para que pueda "flotar" libremente -->
+        <!-- Gráfica movida fuera de las columnas para que pueda "flotar" libremente -->
         <div id="energy-chart-overlay" class="hidden">
             <h3 class="chart-header">Gráfica de Energías (J)</h3>
             <div id="energy-chart-container">
@@ -890,7 +904,6 @@
             function onMouseDown(e) {
                 isDragging = true;
                 const eventPos = e.touches ? e.touches[0] : e;
-                // **CAMBIO**: Usar las coordenadas relativas al viewport para el offset
                 const rect = energyChartOverlay.getBoundingClientRect();
                 offsetX = eventPos.clientX - rect.left;
                 offsetY = eventPos.clientY - rect.top;
@@ -908,7 +921,6 @@
                 let newLeft = eventPos.clientX - offsetX;
                 let newTop = eventPos.clientY - offsetY;
 
-                // **CAMBIO**: Limitar el arrastre al viewport completo (document.body)
                 const parentRect = document.body.getBoundingClientRect();
                 newLeft = Math.max(0, Math.min(newLeft, parentRect.width - energyChartOverlay.offsetWidth));
                 newTop = Math.max(0, Math.min(newTop, parentRect.height - energyChartOverlay.offsetHeight));

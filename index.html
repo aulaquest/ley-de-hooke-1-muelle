@@ -128,7 +128,6 @@
         #simulation-canvas.grab-cursor { cursor: grab; }
         #simulation-canvas.move-cursor { cursor: move; }
         
-        /* **CAMBIO**: Estilos base para la gráfica (móvil) */
         #energy-chart-overlay {
             position: relative;
             width: 100%;
@@ -174,25 +173,23 @@
             text-decoration: underline;
         }
 
-        /* **CAMBIO**: Reducir tamaño de fuente de botones de simulación */
         #start-pause-btn, #reset-simulation-btn {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             padding: 0.4rem 0.8rem;
         }
 
-        /* **CAMBIO**: Estilos responsivos para vista lado a lado en móvil */
+        /* Estilos responsivos para vista móvil */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: row;
                 height: 100%;
             }
-            .simulation-column {
+            /* **CAMBIO**: 50/50 split */
+            .simulation-column, .controls-column {
                 width: 50%;
                 flex-shrink: 0;
             }
             .controls-column {
-                width: 50%;
-                flex-shrink: 0;
                 border-top: none;
                 border-left: 1px solid #374151;
             }
@@ -202,21 +199,26 @@
             .attribution {
                 padding: 0.5rem 1rem;
             }
-            .control-label, .value-display {
-                font-size: 0.8rem;
-            }
-             label.flex.items-center span.ml-2 {
-                font-size: 0.8rem;
+            /* **CAMBIO**: Tamaño de fuente base en móvil */
+            .control-label, .value-display, label.flex.items-center span.ml-2 {
+                font-size: 0.75rem;
             }
             .control-group h3 {
-                font-size: 1rem;
+                font-size: 0.9rem;
+            }
+            /* **CAMBIO**: Controles de simulación fijos */
+            #sticky-controls {
+                position: -webkit-sticky; /* Para Safari */
+                position: sticky;
+                top: 0;
+                z-index: 10;
             }
             #energy-chart-overlay .chart-header {
                 font-size: 0.9rem;
             }
         }
 
-        /* **CAMBIO**: Estilos para PC (ancho > 768px) */
+        /* Estilos para PC (ancho > 768px) */
         @media (min-width: 769px) {
             #start-pause-btn, #reset-simulation-btn {
                 font-size: 0.9rem;
@@ -260,8 +262,9 @@
         <!-- Columna de Controles -->
         <div class="controls-column">
             <div class="controls-scroll-area">
-                <div class="control-group">
-                    
+                <!-- **CAMBIO**: ID añadido para controles fijos -->
+                <div id="sticky-controls" class="control-group">
+                    <h3 class="text-lg font-semibold mb-2 text-white">Controles</h3>
                     <button id="start-pause-btn" class="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors">
                         Empezar
                     </button>
@@ -315,7 +318,6 @@
                             <label class="flex items-center"><input type="checkbox" id="show-energy-graph" class="form-checkbox"> <span class="ml-2">Gráfica de Energías</span></label>
                         </div>
                     </div>
-                    <!-- **CAMBIO**: Gráfica movida aquí para que aparezca en el flujo en móvil -->
                     <div id="energy-chart-overlay" class="hidden">
                         <h3 class="chart-header">Gráfica de Energías (J)</h3>
                         <div id="energy-chart-container">
@@ -323,9 +325,8 @@
                         </div>
                     </div>
                 </div>
-                <!-- **CAMBIO**: Attribution movido aquí para que se desplace con el contenido -->
                 <div class="attribution">
-                    <a href="https://aulaquest.com" target="_blank" rel="noopener noreferrer">Simulación por aulaquest.com</a>
+                    <a href="https://aulaquest.com" target="_blank" rel="noopener noreferrer"> aulaquest.com</a>
                 </div>
             </div>
         </div>
@@ -918,7 +919,6 @@
             let offsetX, offsetY;
 
             function onMouseDown(e) {
-                // **CAMBIO**: Solo permitir arrastrar en pantallas de más de 768px
                 if (window.innerWidth < 769) return;
 
                 isDragging = true;

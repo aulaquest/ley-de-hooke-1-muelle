@@ -186,16 +186,16 @@
             .control-group h3 {
                 font-size: 0.9rem;
             }
+            /* FIX: Removed sticky positioning for controls on mobile */
             #sticky-controls {
-                position: -webkit-sticky;
-                position: sticky;
-                top: 0;
-                z-index: 10;
-                background-color: #1f2937; 
-                padding-top: 1rem;
+                 background-color: #1f2937;
             }
             #energy-chart-overlay .chart-header {
                 font-size: 0.9rem;
+            }
+            /* FIX: Increased energy chart height on mobile */
+            #energy-chart-overlay {
+                height: 280px;
             }
             #info-display-canvas { display: none; }
             #info-display-panel { display: block; }
@@ -539,9 +539,9 @@
             if (!energyChart) return;
 
             if (simState.mode === 1) {
-                energyChart.config.options.indexAxis = 'y';
-                energyChart.config.options.plugins.legend.display = false;
-                energyChart.config.data = {
+                energyChart.options.indexAxis = 'y';
+                energyChart.options.plugins.legend.display = false;
+                energyChart.data = {
                     labels: ['Cinética', 'Pot. Elástica', 'Pot. Gravit.', 'Total'],
                     datasets: [{
                         label: 'Energía (J)',
@@ -552,9 +552,9 @@
                     }]
                 };
             } else { 
-                energyChart.config.options.indexAxis = 'x';
-                energyChart.config.options.plugins.legend.display = true;
-                energyChart.config.data = {
+                energyChart.options.indexAxis = 'x';
+                energyChart.options.plugins.legend.display = true;
+                energyChart.data = {
                     labels: ['Cinética', 'Pot. Elástica', 'Pot. Gravit.', 'Total'],
                     datasets: [
                         { label: 'Muelle 1', data: [0, 0, 0, 0], backgroundColor: 'rgba(59, 130, 246, 0.7)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 },
@@ -729,7 +729,7 @@
             simState.ruler.x = 100;
             simState.ruler.y = 80;
             generateSpringControls();
-            updateChartDataConfig();
+            initEnergyChart();
             resetSimulation();
         }
         
@@ -803,22 +803,41 @@
 
             simState.springs.forEach(s => {
                 updateEnergy(s);
-                maxBound = Math.max(maxBound, s.energies.total, s.energies.potentialE, 1);
-                minBound = Math.min(minBound, s.energies.potentialG);
+                const e = s.energies;
+                maxBound = Math.max(maxBound, e.total, e.potentialE, e.kinetic, 1);
+                minBound = Math.min(minBound, e.total, e.potentialG, -0.2);
             });
 
-            // **CORRECCIÓN**: Resetear escalas a null para que Chart.js las recalcule
-            energyChart.options.scales.x.min = null;
-            energyChart.options.scales.x.max = null;
-            energyChart.options.scales.y.min = null;
-            energyChart.options.scales.y.max = null;
+            const padding = 1.2;
+            const finalMin = minBound * padding;
+            const finalMax = maxBound * padding;
 
             if (simState.mode === 1) {
-                energyChart.options.scales.x.max = maxBound * 1.2;
-                energyChart.options.scales.x.min = minBound * 1.2;
+                energyChart.options.scales = {
+                    y: { 
+                        grid: { display: false },
+                        ticks: { color: '#9ca3af', font: { size: 10 } }
+                    },
+                    x: { 
+                        grid: { color: '#374151' },
+                        ticks: { color: '#d1d5db', font: { size: 11 } },
+                        min: finalMin,
+                        max: finalMax
+                    }
+                };
             } else {
-                energyChart.options.scales.y.max = maxBound * 1.2;
-                energyChart.options.scales.y.min = minBound * 1.2;
+                energyChart.options.scales = {
+                    x: { 
+                        grid: { color: '#374151' },
+                        ticks: { color: '#9ca3af', font: { size: 10 } }
+                    },
+                    y: { 
+                        grid: { display: false },
+                        ticks: { color: '#d1d5db', font: { size: 11 } },
+                        min: finalMin,
+                        max: finalMax
+                    }
+                };
             }
             energyChart.update();
         }

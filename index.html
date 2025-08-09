@@ -12,17 +12,17 @@
     <style>
         html, body {
             height: 100%;
-            overflow: hidden; /* Evita el scroll en el body */
+            overflow: hidden; 
         }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #111827; /* bg-gray-900 */
-            color: #d1d5db; /* text-gray-300 */
+            background-color: #111827;
+            color: #d1d5db;
             cursor: default;
         }
         .control-group {
-            background-color: #1f2937; /* bg-gray-800 */
-            border: 1px solid #374151; /* border-gray-700 */
+            background-color: #1f2937;
+            border: 1px solid #374151;
             border-radius: 0.5rem;
             padding: 1rem;
             margin-bottom: 1rem;
@@ -33,18 +33,18 @@
             align-items: center;
             font-size: 0.875rem;
             font-weight: 500;
-            color: #9ca3af; /* text-gray-400 */
+            color: #9ca3af;
         }
         .value-display {
             font-weight: 600;
-            color: #e5e7eb; /* text-gray-200 */
+            color: #e5e7eb;
         }
         input[type="range"] {
             -webkit-appearance: none;
             appearance: none;
             width: 100%;
             height: 6px;
-            background: #374151; /* bg-gray-700 */
+            background: #374151;
             border-radius: 3px;
             outline: none;
             opacity: 0.7;
@@ -55,14 +55,11 @@
             appearance: none;
             width: 18px;
             height: 18px;
-            background: #3b82f6; /* bg-blue-500 */
+            background: #3b82f6;
             cursor: pointer;
             border-radius: 50%;
         }
         .info-box {
-            position: absolute;
-            top: 10px;
-            left: 10px;
             background-color: rgba(31, 41, 55, 0.8);
             padding: 6px 10px;
             border-radius: 6px;
@@ -70,8 +67,8 @@
             font-size: 0.75rem;
             line-height: 1.2;
             border: 1px solid #4b5563;
-            pointer-events: none;
-            z-index: 20;
+            margin-bottom: 1rem;
+            text-align: center;
         }
         .chronometer-box {
             position: absolute;
@@ -85,15 +82,6 @@
             align-items: center;
             gap: 8px;
             z-index: 20;
-        }
-        .chronometer-box button {
-            background: transparent;
-            border: none;
-            color: #d1d5db;
-            cursor: pointer;
-        }
-        .chronometer-box button:hover {
-            color: #3b82f6;
         }
         .main-container {
             display: flex;
@@ -152,7 +140,7 @@
             color: #e5e7eb;
             text-align: center;
             padding: 4px;
-            cursor: default; /* No se puede mover en móvil */
+            cursor: default;
             user-select: none;
         }
         #energy-chart-container {
@@ -165,26 +153,19 @@
             font-size: 0.875rem;
             color: #6b7280;
         }
-        .attribution a {
-            color: #9ca3af;
-            text-decoration: none;
-        }
-        .attribution a:hover {
-            text-decoration: underline;
-        }
-
         #start-pause-btn, #reset-simulation-btn {
             font-size: 0.8rem;
             padding: 0.4rem 0.8rem;
         }
 
-        /* Estilos responsivos para vista móvil */
+        .mobile-only { display: none; }
+        .desktop-only { display: inline; }
+
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: row;
                 height: 100%;
             }
-            /* **CAMBIO**: 50/50 split */
             .simulation-column, .controls-column {
                 width: 50%;
                 flex-shrink: 0;
@@ -199,32 +180,47 @@
             .attribution {
                 padding: 0.5rem 1rem;
             }
-            /* **CAMBIO**: Tamaño de fuente base en móvil */
             .control-label, .value-display, label.flex.items-center span.ml-2 {
                 font-size: 0.75rem;
             }
             .control-group h3 {
                 font-size: 0.9rem;
             }
-            /* **CAMBIO**: Controles de simulación fijos */
             #sticky-controls {
-                position: -webkit-sticky; /* Para Safari */
+                position: -webkit-sticky;
                 position: sticky;
                 top: 0;
                 z-index: 10;
+                background-color: #1f2937; 
+                padding-top: 1rem;
             }
             #energy-chart-overlay .chart-header {
                 font-size: 0.9rem;
             }
+            #info-display-canvas { display: none; }
+            #info-display-panel { display: block; }
+            
+            .mobile-only { display: inline; }
+            .desktop-only { display: none; }
         }
 
-        /* Estilos para PC (ancho > 768px) */
         @media (min-width: 769px) {
             #start-pause-btn, #reset-simulation-btn {
                 font-size: 0.9rem;
                 padding: 0.5rem 1rem;
             }
-            /* La gráfica vuelve a ser un overlay flotante */
+            .info-box {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                pointer-events: none;
+                z-index: 20;
+                margin-bottom: 0;
+                text-align: left;
+            }
+            #info-display-panel { display: none; }
+            #info-display-canvas { display: block; }
+
             #energy-chart-overlay {
                 position: absolute;
                 width: 420px;
@@ -246,7 +242,7 @@
         <!-- Columna de Simulación -->
         <div class="simulation-column">
             <canvas id="simulation-canvas"></canvas>
-            <div id="info-display" class="info-box"></div>
+            <div id="info-display-canvas" class="info-box"></div>
             <div id="chronometer-container" class="chronometer-box hidden">
                 <div id="chronometer-time" class="text-white text-md font-semibold">0.0s</div>
                 <button id="chrono-pause-play-btn" title="Pausar/Reanudar">
@@ -262,71 +258,54 @@
         <!-- Columna de Controles -->
         <div class="controls-column">
             <div class="controls-scroll-area">
-                <!-- **CAMBIO**: ID añadido para controles fijos -->
-                <div id="sticky-controls" class="control-group">
-                    
-                    <button id="start-pause-btn" class="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors">
-                        Empezar
-                    </button>
-                    <button id="reset-simulation-btn" class="w-full mt-2 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors">
-                        Reiniciar
-                    </button>
-                </div>
-
-                <div id="controls-tab1">
+                <div id="sticky-controls">
                     <div class="control-group">
-                        <div class="flex items-center justify-between">
-                            <label class="control-label" for="mass1">Masa (m) <span id="mass1-value" class="value-display">1.0 kg</span></label>
-                            <label class="flex items-center text-xs text-gray-400"><input type="checkbox" id="hide-mass-value" class="form-checkbox h-4 w-4"> <span class="ml-1">Ocultar</span></label>
-                        </div>
-                        <input type="range" id="mass1" min="0.1" max="5" step="0.1" value="1.0" class="w-full mt-2">
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label" for="gravity">Planeta</label>
-                        <select id="gravity" class="w-full mt-2 bg-gray-700 border border-gray-600 rounded-md p-2 text-white">
-                            <option value="9.81">Tierra</option>
-                            <option value="1.62">Luna</option>
-                            <option value="3.71">Marte</option>
-                            <option value="24.79">Júpiter</option>
+                        <label class="control-label" for="sim-mode">Modo de Simulación</label>
+                        <select id="sim-mode" class="w-full mt-2 bg-gray-700 border border-gray-600 rounded-md p-2 text-white">
+                            <option value="1">Un Muelle</option>
+                            <option value="2">Dos Muelles</option>
                         </select>
                     </div>
                     <div class="control-group">
-                        <div class="flex items-center justify-between">
-                            <label class="control-label" for="k1">Constante (k) <span id="k1-value" class="value-display">50 N/m</span></label>
-                            <label class="flex items-center text-xs text-gray-400"><input type="checkbox" id="hide-k-value" class="form-checkbox h-4 w-4"> <span class="ml-1">Ocultar</span></label>
-                        </div>
-                        <input type="range" id="k1" min="10" max="100" step="1" value="50" class="w-full mt-2">
+                        <h3 class="text-lg font-semibold mb-2 text-white">Controles</h3>
+                        <button id="start-pause-btn" class="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                            Empezar
+                        </button>
+                        <button id="reset-simulation-btn" class="w-full mt-2 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                            Reiniciar
+                        </button>
                     </div>
-                     <div class="control-group">
-                        <label class="control-label" for="l0">Longitud Natural (L₀) <span id="l0-value" class="value-display">0.5 m</span></label>
-                        <input type="range" id="l0" min="0.2" max="1.0" step="0.05" value="0.5" class="w-full mt-2">
+                </div>
+                
+                <div id="info-display-panel" class="info-box"></div>
+
+                <div id="springs-controls-container">
+                </div>
+                
+                <div id="global-controls-container">
+                </div>
+
+                <div class="control-group">
+                    <h3 class="text-lg font-semibold mb-2 text-white">Visualización</h3>
+                    <div class="space-y-2">
+                        <label class="flex items-center"><input type="checkbox" id="show-forces" class="form-checkbox" checked> <span class="ml-2">Vectores de Fuerza</span></label>
+                        <label class="flex items-center"><input type="checkbox" id="show-va-vectors" class="form-checkbox"> <span class="ml-2">Vectores v/a</span></label>
+                        <label class="flex items-center"><input type="checkbox" id="show-natural-length" class="form-checkbox"> <span class="ml-2">Longitud natural</span></label>
+                        <label class="flex items-center"><input type="checkbox" id="show-equilibrium-pos" class="form-checkbox" checked> <span class="ml-2">Posición de equilibrio</span></label>
+                        <label class="flex items-center"><input type="checkbox" id="show-movable-ref" class="form-checkbox"> <span class="ml-2">Referencia móvil</span></label>
+                        <label class="flex items-center"><input type="checkbox" id="show-ruler" class="form-checkbox"> <span class="ml-2">Regla</span></label>
+                        <label class="flex items-center"><input type="checkbox" id="show-chronometer" class="form-checkbox"> <span class="ml-2">Cronómetro</span></label>
+                        <label class="flex items-center"><input type="checkbox" id="show-energy-graph" class="form-checkbox"> <span class="ml-2">Gráfica de Energías</span></label>
                     </div>
-                    <div class="control-group">
-                        <label class="control-label" for="damping">Amortiguamiento <span id="damping-value" class="value-display">Bajo</span></label>
-                        <input type="range" id="damping" min="1" max="50" step="1" value="5" class="w-full mt-2">
-                    </div>
-                    <div class="control-group">
-                        <h3 class="text-lg font-semibold mb-2 text-white">Visualización</h3>
-                        <div class="space-y-2">
-                            <label class="flex items-center"><input type="checkbox" id="show-forces1" class="form-checkbox" checked> <span class="ml-2">Vectores de Fuerza</span></label>
-                            <label class="flex items-center"><input type="checkbox" id="show-va-vectors" class="form-checkbox"> <span class="ml-2">Vectores v/a</span></label>
-                            <label class="flex items-center"><input type="checkbox" id="show-natural-length" class="form-checkbox"> <span class="ml-2">Longitud natural</span></label>
-                            <label class="flex items-center"><input type="checkbox" id="show-equilibrium-pos" class="form-checkbox" checked> <span class="ml-2">Posición de equilibrio</span></label>
-                            <label class="flex items-center"><input type="checkbox" id="show-movable-ref" class="form-checkbox"> <span class="ml-2">Referencia móvil</span></label>
-                            <label class="flex items-center"><input type="checkbox" id="show-ruler" class="form-checkbox"> <span class="ml-2">Regla</span></label>
-                            <label class="flex items-center"><input type="checkbox" id="show-chronometer" class="form-checkbox"> <span class="ml-2">Cronómetro</span></label>
-                            <label class="flex items-center"><input type="checkbox" id="show-energy-graph" class="form-checkbox"> <span class="ml-2">Gráfica de Energías</span></label>
-                        </div>
-                    </div>
-                    <div id="energy-chart-overlay" class="hidden">
-                        <h3 class="chart-header">Gráfica de Energías (J)</h3>
-                        <div id="energy-chart-container">
-                            <canvas id="energy-chart"></canvas>
-                        </div>
+                </div>
+                <div id="energy-chart-overlay" class="hidden">
+                    <h3 class="chart-header">Gráfica de Energías (J)</h3>
+                    <div id="energy-chart-container">
+                        <canvas id="energy-chart"></canvas>
                     </div>
                 </div>
                 <div class="attribution">
-                    <a href="https://aulaquest.com" target="_blank" rel="noopener noreferrer"> aulaquest.com</a>
+                    <a href="https://aulaquest.com" target="_blank" rel="noopener noreferrer">Simulación por aulaquest.com</a>
                 </div>
             </div>
         </div>
@@ -364,128 +343,253 @@
         const BASE_PIXELS_PER_METER = 250;
         const START_Y = 50;
 
-        const state = {
-            tab1: {
-                mass: 1.0, gravity: 9.81, k: 50, l0: 0.5, damping: 0.005,
-                position: 0, velocity: 0, acceleration: 0,
-                simulationState: 'initial',
+        const simState = {
+            mode: 1, 
+            gravity: 9.81,
+            simulationState: 'initial',
+            showForces: true,
+            showVelocityAccelVectors: false,
+            showNaturalLength: false,
+            showEquilibrium: true,
+            showMovableRef: false,
+            showRuler: false,
+            showChronometer: false,
+            showEnergyGraph: false,
+            movableRefY: 300,
+            isDraggingRef: false,
+            ruler: { x: 100, y: 80, width: 60, height: 400, isDragging: false, offsetX: 0, offsetY: 0 },
+            chronometerTime: 0,
+            chronometerManualPause: false,
+            springs: []
+        };
+
+        function createSpringState(defaults = {}) {
+            return {
+                mass: defaults.mass || 1.0,
+                k: defaults.k || 50,
+                l0: defaults.l0 || 0.5,
+                damping: defaults.damping || 0.005,
+                position: 0,
+                velocity: 0,
+                acceleration: 0,
                 isDraggingMass: false,
-                showForces: true, showVelocityAccelVectors: false, showNaturalLength: false, showEquilibrium: true,
-                showMovableRef: false, showRuler: false, showChronometer: false, showEnergyGraph: false,
-                movableRefY: 300, isDraggingRef: false,
-                ruler: { x: 100, y: 80, width: 60, height: 400, isDragging: false, offsetX: 0, offsetY: 0 },
                 massDrag: { startY: 0, startPos: 0 },
-                pixelsPerMeter: BASE_PIXELS_PER_METER,
-                chronometerTime: 0, chronometerManualPause: false, oscillationCount: 0, lastPosSign: 0,
+                oscillationCount: 0,
+                lastPosSign: 0,
                 energies: { kinetic: 0, potentialG: 0, potentialE: 0, total: 0 },
                 potentialGRefY: 0,
-            }
-        };
+            };
+        }
 
         // --- DOM ELEMENTS ---
         let startPauseBtn, resetSimulationBtn, chronoContainer, chronoTimeEl, 
-            chronoPausePlayBtn, chronoResetBtn, iconPause, iconPlay, energyChartOverlay;
+            chronoPausePlayBtn, chronoResetBtn, iconPause, iconPlay, energyChartOverlay,
+            springsControlsContainer, simModeSelect, globalControlsContainer;
         
+        function generateSpringControls() {
+            springsControlsContainer.innerHTML = '';
+            globalControlsContainer.innerHTML = '';
+            
+            if (simState.mode === 1) {
+                const spring = simState.springs[0];
+                const controlHtml = `
+                    <div class="control-group">
+                        <h3 class="text-lg font-semibold mb-2 text-white">Muelle 1</h3>
+                        <div class="flex items-center justify-between">
+                            <label class="control-label" for="mass0">Masa (m1) <span id="mass0-value" class="value-display">${spring.mass.toFixed(1)} kg</span></label>
+                        </div>
+                        <input type="range" id="mass0" min="0.1" max="5" step="0.1" value="${spring.mass}" class="w-full mt-2">
+                        
+                        <div class="flex items-center justify-between mt-4">
+                            <label class="control-label" for="k0">Constante (k1) <span id="k0-value" class="value-display">${spring.k.toFixed(0)} N/m</span></label>
+                        </div>
+                        <input type="range" id="k0" min="10" max="100" step="1" value="${spring.k}" class="w-full mt-2">
+                    </div>
+                `;
+                springsControlsContainer.innerHTML = controlHtml;
+
+                const globalControlsHtml = `
+                    <div class="control-group">
+                        <label class="control-label" for="gravity">Planeta</label>
+                        <select id="gravity" class="w-full mt-2 bg-gray-700 border border-gray-600 rounded-md p-2 text-white">
+                            <option value="9.81" ${simState.gravity === 9.81 ? 'selected' : ''}>Tierra</option>
+                            <option value="1.62" ${simState.gravity === 1.62 ? 'selected' : ''}>Luna</option>
+                            <option value="3.71" ${simState.gravity === 3.71 ? 'selected' : ''}>Marte</option>
+                            <option value="24.79" ${simState.gravity === 24.79 ? 'selected' : ''}>Júpiter</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label" for="damping0">Amortiguamiento <span id="damping0-value" class="value-display">Bajo</span></label>
+                        <input type="range" id="damping0" min="0" max="50" step="1" value="${spring.damping * 1000}" class="w-full mt-2">
+                    </div>
+                `;
+                globalControlsContainer.innerHTML = globalControlsHtml;
+
+            } else { // Modo 2 muelles
+                for (let i = 0; i < simState.mode; i++) {
+                    const spring = simState.springs[i];
+                    const controlHtml = `
+                        <div class="control-group">
+                            <h3 class="text-lg font-semibold mb-2 text-white">Muelle ${i + 1}</h3>
+                            <div class="flex items-center justify-between">
+                                <label class="control-label" for="mass${i}">Masa (m${i+1}) <span id="mass${i}-value" class="value-display">${spring.mass.toFixed(1)} kg</span></label>
+                            </div>
+                            <input type="range" id="mass${i}" min="0.1" max="5" step="0.1" value="${spring.mass}" class="w-full mt-2">
+                            
+                            <div class="flex items-center justify-between mt-4">
+                                <label class="control-label" for="k${i}">Constante (k${i+1}) <span id="k${i}-value" class="value-display">${spring.k.toFixed(0)} N/m</span></label>
+                            </div>
+                            <input type="range" id="k${i}" min="10" max="100" step="1" value="${spring.k}" class="w-full mt-2">
+
+                            <div class="flex items-center justify-between mt-4">
+                                <label class="control-label" for="damping${i}">
+                                    <span class="desktop-only">Amortiguamiento ${i+1}</span>
+                                    <span class="mobile-only">Amort. ${i+1}</span>
+                                    <span id="damping${i}-value" class="value-display">Bajo</span>
+                                </label>
+                            </div>
+                            <input type="range" id="damping${i}" min="0" max="50" step="1" value="${spring.damping * 1000}" class="w-full mt-2">
+                        </div>
+                    `;
+                    springsControlsContainer.innerHTML += controlHtml;
+                }
+                 const globalControlsHtml = `
+                    <div class="control-group">
+                        <label class="control-label" for="gravity">Planeta</label>
+                        <select id="gravity" class="w-full mt-2 bg-gray-700 border border-gray-600 rounded-md p-2 text-white">
+                            <option value="9.81" ${simState.gravity === 9.81 ? 'selected' : ''}>Tierra</option>
+                            <option value="1.62" ${simState.gravity === 1.62 ? 'selected' : ''}>Luna</option>
+                            <option value="3.71" ${simState.gravity === 3.71 ? 'selected' : ''}>Marte</option>
+                            <option value="24.79" ${simState.gravity === 24.79 ? 'selected' : ''}>Júpiter</option>
+                        </select>
+                    </div>
+                `;
+                globalControlsContainer.innerHTML = globalControlsHtml;
+            }
+            addControlListeners();
+        }
+
+        function addControlListeners() {
+            document.getElementById('gravity').addEventListener('input', (e) => { simState.gravity = parseFloat(e.target.value); resetSimulation(); });
+
+            for (let i = 0; i < simState.mode; i++) {
+                document.getElementById(`mass${i}`).addEventListener('input', (e) => {
+                    simState.springs[i].mass = parseFloat(e.target.value);
+                    document.getElementById(`mass${i}-value`).textContent = `${simState.springs[i].mass.toFixed(1)} kg`;
+                    resetSimulation();
+                });
+                document.getElementById(`k${i}`).addEventListener('input', (e) => {
+                    simState.springs[i].k = parseFloat(e.target.value);
+                    document.getElementById(`k${i}-value`).textContent = `${simState.springs[i].k.toFixed(0)} N/m`;
+                    resetSimulation();
+                });
+                
+                const dampingSlider = document.getElementById(`damping${i}`);
+                if (dampingSlider) {
+                    dampingSlider.addEventListener('input', (e) => {
+                        const val = parseFloat(e.target.value);
+                        simState.springs[i].damping = val / 1000;
+                        const dampingDisplay = document.getElementById(`damping${i}-value`);
+                        if (val === 0) dampingDisplay.textContent = 'Cero';
+                        else if (val < 10) dampingDisplay.textContent = 'Bajo';
+                        else if (val < 30) dampingDisplay.textContent = 'Medio';
+                        else dampingDisplay.textContent = 'Alto';
+                    });
+                    const initialVal = parseFloat(dampingSlider.value);
+                    const initialDisplay = document.getElementById(`damping${i}-value`);
+                    if (initialVal === 0) initialDisplay.textContent = 'Cero';
+                    else if (initialVal < 10) initialDisplay.textContent = 'Bajo';
+                    else if (initialVal < 30) initialDisplay.textContent = 'Medio';
+                    else initialDisplay.textContent = 'Alto';
+                }
+            }
+        }
+
         function initEnergyChart() {
             const chartCtx = energyChartCanvas.getContext('2d');
             Chart.defaults.color = '#d1d5db';
             Chart.defaults.font.family = "'Inter', sans-serif";
             
-            energyChart = new Chart(chartCtx, {
+            const chartConfig = {
                 type: 'bar',
-                data: {
+                data: {},
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { color: '#374151' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                        y: { grid: { display: false }, ticks: { color: '#d1d5db', font: { size: 11 } } }
+                    },
+                    plugins: {
+                        legend: { display: true, position: 'top', labels: { font: { size: 10 } } },
+                        tooltip: { animation: false }
+                    },
+                    animation: false,
+                }
+            };
+
+            if (energyChart) {
+                energyChart.destroy();
+            }
+            energyChart = new Chart(chartCtx, chartConfig);
+            updateChartDataConfig();
+        }
+
+        function updateChartDataConfig() {
+            if (!energyChart) return;
+
+            if (simState.mode === 1) {
+                energyChart.config.options.indexAxis = 'y';
+                energyChart.config.options.plugins.legend.display = false;
+                energyChart.config.data = {
                     labels: ['Cinética', 'Pot. Elástica', 'Pot. Gravit.', 'Total'],
                     datasets: [{
                         label: 'Energía (J)',
                         data: [0, 0, 0, 0],
-                        backgroundColor: [
-                            'rgba(59, 130, 246, 0.7)',
-                            'rgba(249, 115, 22, 0.7)',
-                            'rgba(34, 197, 94, 0.7)',
-                            'rgba(217, 70, 239, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(59, 130, 246, 1)',
-                            'rgba(249, 115, 22, 1)',
-                            'rgba(34, 197, 94, 1)',
-                            'rgba(217, 70, 239, 1)'
-                        ],
+                        backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(249, 115, 22, 0.7)', 'rgba(34, 197, 94, 0.7)', 'rgba(217, 70, 239, 0.7)'],
+                        borderColor: ['rgba(59, 130, 246, 1)', 'rgba(249, 115, 22, 1)', 'rgba(34, 197, 94, 1)', 'rgba(217, 70, 239, 1)'],
                         borderWidth: 1
                     }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            grid: { color: '#374151' },
-                            ticks: { color: '#9ca3af', font: { size: 10 } }
-                        },
-                        y: {
-                            grid: { display: false },
-                            ticks: { color: '#d1d5db', font: { size: 11 } }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                             animation: false,
-                             callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) { label += ': '; }
-                                    if (context.parsed.x !== null) {
-                                        label += context.parsed.x.toFixed(2) + ' J';
-                                    }
-                                    return label;
-                                }
-                            }
-                        }
-                    },
-                    animation: false,
-                }
-            });
+                };
+            } else { 
+                energyChart.config.options.indexAxis = 'x';
+                energyChart.config.options.plugins.legend.display = true;
+                energyChart.config.data = {
+                    labels: ['Cinética', 'Pot. Elástica', 'Pot. Gravit.', 'Total'],
+                    datasets: [
+                        { label: 'Muelle 1', data: [0, 0, 0, 0], backgroundColor: 'rgba(59, 130, 246, 0.7)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 },
+                        { label: 'Muelle 2', data: [0, 0, 0, 0], backgroundColor: 'rgba(249, 115, 22, 0.7)', borderColor: 'rgba(249, 115, 22, 1)', borderWidth: 1 }
+                    ]
+                };
+            }
+            energyChart.update();
         }
         
-        function getEquilibriumPosition() {
-            const s = state.tab1;
-            return s.l0 + (s.mass * s.gravity) / s.k;
+        function getEquilibriumPosition(spring) {
+            return spring.l0 + (spring.mass * simState.gravity) / spring.k;
         }
 
         // --- EVENT LISTENERS ---
         function setupEventListeners() {
             startPauseBtn.addEventListener('click', handleStartPause);
             resetSimulationBtn.addEventListener('click', fullReset);
-
-            document.getElementById('mass1').addEventListener('input', (e) => { state.tab1.mass = parseFloat(e.target.value); document.getElementById('mass1-value').textContent = `${state.tab1.mass.toFixed(1)} kg`; resetSimulation(); });
-            document.getElementById('gravity').addEventListener('input', (e) => { state.tab1.gravity = parseFloat(e.target.value); resetSimulation(); });
-            document.getElementById('k1').addEventListener('input', (e) => { state.tab1.k = parseFloat(e.target.value); document.getElementById('k1-value').textContent = `${state.tab1.k.toFixed(0)} N/m`; resetSimulation(); });
-            document.getElementById('l0').addEventListener('input', (e) => { state.tab1.l0 = parseFloat(e.target.value); document.getElementById('l0-value').textContent = `${state.tab1.l0.toFixed(2)} m`; resetSimulation(); });
-            document.getElementById('damping').addEventListener('input', (e) => {
-                const val = parseFloat(e.target.value);
-                state.tab1.damping = val / 1000;
-                const dampingDisplay = document.getElementById('damping-value');
-                if (val < 10) dampingDisplay.textContent = 'Bajo';
-                else if (val < 30) dampingDisplay.textContent = 'Medio';
-                else dampingDisplay.textContent = 'Alto';
+            simModeSelect.addEventListener('change', (e) => {
+                simState.mode = parseInt(e.target.value);
+                fullReset();
             });
 
-            document.getElementById('hide-mass-value').addEventListener('change', (e) => { document.getElementById('mass1-value').classList.toggle('hidden', e.target.checked); });
-            document.getElementById('hide-k-value').addEventListener('change', (e) => { document.getElementById('k1-value').classList.toggle('hidden', e.target.checked); });
-
-            document.getElementById('show-forces1').addEventListener('change', (e) => state.tab1.showForces = e.target.checked);
-            document.getElementById('show-va-vectors').addEventListener('change', (e) => state.tab1.showVelocityAccelVectors = e.target.checked);
-            document.getElementById('show-natural-length').addEventListener('change', (e) => state.tab1.showNaturalLength = e.target.checked);
-            document.getElementById('show-equilibrium-pos').addEventListener('change', (e) => state.tab1.showEquilibrium = e.target.checked);
-            document.getElementById('show-movable-ref').addEventListener('change', (e) => state.tab1.showMovableRef = e.target.checked);
-            document.getElementById('show-ruler').addEventListener('change', (e) => state.tab1.showRuler = e.target.checked);
+            document.getElementById('show-forces').addEventListener('change', (e) => simState.showForces = e.target.checked);
+            document.getElementById('show-va-vectors').addEventListener('change', (e) => simState.showVelocityAccelVectors = e.target.checked);
+            document.getElementById('show-natural-length').addEventListener('change', (e) => simState.showNaturalLength = e.target.checked);
+            document.getElementById('show-equilibrium-pos').addEventListener('change', (e) => simState.showEquilibrium = e.target.checked);
+            document.getElementById('show-movable-ref').addEventListener('change', (e) => simState.showMovableRef = e.target.checked);
+            document.getElementById('show-ruler').addEventListener('change', (e) => simState.showRuler = e.target.checked);
             document.getElementById('show-chronometer').addEventListener('change', (e) => {
-                state.tab1.showChronometer = e.target.checked;
+                simState.showChronometer = e.target.checked;
                 chronoContainer.classList.toggle('hidden', !e.target.checked);
             });
             document.getElementById('show-energy-graph').addEventListener('change', (e) => {
-                 state.tab1.showEnergyGraph = e.target.checked;
+                 simState.showEnergyGraph = e.target.checked;
                  energyChartOverlay.classList.toggle('hidden', !e.target.checked);
             });
             
@@ -512,26 +616,30 @@
         function handleMouseDown(e) {
             e.preventDefault();
             const { x, y } = getEventPos(e);
-            const s = state.tab1;
-            const massSize = 25 + Math.sqrt(s.mass) * 12;
-            const massY_px = START_Y + s.position * s.pixelsPerMeter;
             
-            if (x > width/2 - massSize && x < width/2 + massSize && y > massY_px && y < massY_px + massSize) {
-                s.isDraggingMass = true;
-                s.massDrag.startY = y;
-                s.massDrag.startPos = s.position;
+            simState.springs.forEach((s, i) => {
+                const massSize = 25 + Math.sqrt(s.mass) * 12;
+                const massX_px = (width / (simState.mode + 1)) * (i + 1);
+                const massY_px = START_Y + s.position * simState.pixelsPerMeter;
+                
+                if (x > massX_px - massSize && x < massX_px + massSize && y > massY_px && y < massY_px + massSize) {
+                    s.isDraggingMass = true;
+                    s.massDrag.startY = y;
+                    s.massDrag.startPos = s.position;
+                    canvas.classList.add('grabbing');
+                    return;
+                }
+            });
+
+            if (simState.showMovableRef && Math.abs(y - simState.movableRefY) < 15) {
+                simState.isDraggingRef = true;
                 canvas.classList.add('grabbing');
                 return;
             }
-            if (s.showMovableRef && Math.abs(y - s.movableRefY) < 15) {
-                s.isDraggingRef = true;
-                canvas.classList.add('grabbing');
-                return;
-            }
-            if (s.showRuler && x > s.ruler.x && x < s.ruler.x + s.ruler.width && y > s.ruler.y && y < s.ruler.y + s.ruler.height) {
-                s.ruler.isDragging = true;
-                s.ruler.offsetX = x - s.ruler.x;
-                s.ruler.offsetY = y - s.ruler.y;
+            if (simState.showRuler && x > simState.ruler.x && x < simState.ruler.x + simState.ruler.width && y > simState.ruler.y && y < simState.ruler.y + simState.ruler.height) {
+                simState.ruler.isDragging = true;
+                simState.ruler.offsetX = x - simState.ruler.x;
+                simState.ruler.offsetY = y - simState.ruler.y;
                 canvas.classList.add('move-cursor');
                 return;
             }
@@ -540,40 +648,52 @@
         function handleMouseMove(e) {
             e.preventDefault();
             const { x, y } = getEventPos(e);
-            const s = state.tab1;
-            if (s.isDraggingMass) {
-                const deltaY = y - s.massDrag.startY;
-                s.position = s.massDrag.startPos + deltaY / s.pixelsPerMeter;
-                s.velocity = 0;
-            } else if (s.isDraggingRef) {
-                s.movableRefY = y;
-            } else if (s.ruler.isDragging) {
-                s.ruler.x = x - s.ruler.offsetX;
-                s.ruler.y = y - s.ruler.offsetY;
+
+            simState.springs.forEach(s => {
+                if (s.isDraggingMass) {
+                    const deltaY = y - s.massDrag.startY;
+                    s.position = s.massDrag.startPos + deltaY / simState.pixelsPerMeter;
+                    s.velocity = 0;
+                }
+            });
+
+            if (simState.isDraggingRef) {
+                simState.movableRefY = y;
+            } else if (simState.ruler.isDragging) {
+                simState.ruler.x = x - simState.ruler.offsetX;
+                simState.ruler.y = y - simState.ruler.offsetY;
             } else {
                 updateCursor(x, y);
             }
         }
         
         function handleMouseUp() {
-            const s = state.tab1;
-            if (s.isDraggingMass) {
-                setEnergyChartScale();
-            }
-            s.isDraggingMass = false;
-            s.isDraggingRef = false;
-            s.ruler.isDragging = false;
+            simState.springs.forEach(s => {
+                if (s.isDraggingMass) {
+                    setEnergyChartScale();
+                }
+                s.isDraggingMass = false;
+            });
+            simState.isDraggingRef = false;
+            simState.ruler.isDragging = false;
             canvas.classList.remove('grabbing', 'move-cursor', 'grab-cursor');
         }
 
         function updateCursor(x, y) {
-            const s = state.tab1;
-            const massSize = 25 + Math.sqrt(s.mass) * 12;
-            const massY_px = START_Y + s.position * s.pixelsPerMeter;
+            let isOverMass = false;
+            simState.springs.forEach((s, i) => {
+                const massSize = 25 + Math.sqrt(s.mass) * 12;
+                const massX_px = (width / (simState.mode + 1)) * (i + 1);
+                const massY_px = START_Y + s.position * simState.pixelsPerMeter;
 
-            if (x > width/2 - massSize && x < width/2 + massSize && y > massY_px && y < massY_px + massSize) {
+                if (x > massX_px - massSize && x < massX_px + massSize && y > massY_px && y < massY_px + massSize) {
+                    isOverMass = true;
+                }
+            });
+
+            if(isOverMass) {
                 canvas.classList.add('grab-cursor');
-            } else if (s.showRuler && x > s.ruler.x && x < s.ruler.x + s.ruler.width && y > s.ruler.y && y < s.ruler.y + s.ruler.height) {
+            } else if (simState.showRuler && x > simState.ruler.x && x < simState.ruler.x + simState.ruler.width && y > simState.ruler.y && y < simState.ruler.y + simState.ruler.height) {
                 canvas.classList.add('move-cursor');
             } else {
                 canvas.classList.remove('grab-cursor', 'move-cursor');
@@ -581,198 +701,226 @@
         }
         
         function resetSimulation() {
-            const s = state.tab1;
-            s.simulationState = 'initial';
+            simState.simulationState = 'initial';
             startPauseBtn.textContent = 'Empezar';
             startPauseBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600', 'bg-blue-600', 'hover:bg-blue-700');
             startPauseBtn.classList.add('bg-green-600', 'hover:bg-green-700');
             
-            const equilibriumPos = getEquilibriumPosition();
-            s.position = equilibriumPos;
-            s.velocity = 0;
-            s.acceleration = 0;
-            s.potentialGRefY = equilibriumPos; 
+            simState.springs.forEach(s => {
+                const equilibriumPos = getEquilibriumPosition(s);
+                s.position = equilibriumPos;
+                s.velocity = 0;
+                s.acceleration = 0;
+                s.potentialGRefY = equilibriumPos; 
+                updateEnergy(s);
+            });
             
             resetChronometer();
             updateScale();
-            updateEnergy();
-            
-            if(energyChart) {
-                energyChart.options.scales.x.max = 1;
-                energyChart.options.scales.x.min = -1;
-            }
+            setEnergyChartScale();
+            updateEnergyGraph();
         }
         
         function fullReset() {
+            simState.springs = [];
+            for (let i = 0; i < simState.mode; i++) {
+                simState.springs.push(createSpringState());
+            }
+            simState.ruler.x = 100;
+            simState.ruler.y = 80;
+            generateSpringControls();
+            updateChartDataConfig();
             resetSimulation();
-            state.tab1.ruler.x = 100;
-            state.tab1.ruler.y = 80;
         }
         
         function handleStartPause() {
-            const s = state.tab1;
-            if (s.simulationState === 'initial') {
-                s.simulationState = 'running';
+            if (simState.simulationState === 'initial') {
+                simState.simulationState = 'running';
                 startPauseBtn.textContent = 'Pausar';
-                startPauseBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
-                startPauseBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+                startPauseBtn.classList.replace('bg-green-600', 'bg-yellow-500');
+                startPauseBtn.classList.replace('hover:bg-green-700', 'hover:bg-yellow-600');
                 setEnergyChartScale();
                 resetChronometer();
-            } else if (s.simulationState === 'running') {
-                s.simulationState = 'paused';
+            } else if (simState.simulationState === 'running') {
+                simState.simulationState = 'paused';
                 startPauseBtn.textContent = 'Reanudar';
-                startPauseBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
-                startPauseBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-            } else if (s.simulationState === 'paused') {
-                s.simulationState = 'running';
+                startPauseBtn.classList.replace('bg-yellow-500', 'bg-blue-600');
+                startPauseBtn.classList.replace('hover:bg-yellow-600', 'hover:bg-blue-700');
+            } else if (simState.simulationState === 'paused') {
+                simState.simulationState = 'running';
                 startPauseBtn.textContent = 'Pausar';
-                startPauseBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                startPauseBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+                startPauseBtn.classList.replace('bg-blue-600', 'bg-yellow-500');
+                startPauseBtn.classList.replace('hover:bg-blue-700', 'hover:bg-yellow-600');
             }
         }
         
         function resetChronometer() {
-            const s = state.tab1;
-            s.chronometerTime = 0;
-            s.oscillationCount = 0;
-            s.lastPosSign = 0;
+            simState.chronometerTime = 0;
+            simState.springs.forEach(s => {
+                s.oscillationCount = 0;
+                s.lastPosSign = 0;
+            });
         }
         
         function toggleChronometer() {
-            state.tab1.chronometerManualPause = !state.tab1.chronometerManualPause;
+            simState.chronometerManualPause = !simState.chronometerManualPause;
         }
 
         // --- PHYSICS, SCALE & ANIMATION ---
         function updateScale() {
-            const s = state.tab1;
-            const equilibriumPos = getEquilibriumPosition();
-            const maxDisplacement = Math.max(Math.abs(s.position - equilibriumPos), Math.abs(s.l0 - equilibriumPos));
-            const maxPosition = s.l0 + maxDisplacement * 2;
+            let maxPosition = 0;
+            simState.springs.forEach(s => {
+                const equilibriumPos = getEquilibriumPosition(s);
+                const maxDisplacement = Math.max(Math.abs(s.position - equilibriumPos), Math.abs(s.l0 - equilibriumPos));
+                maxPosition = Math.max(maxPosition, s.l0 + maxDisplacement * 2);
+            });
             
             const requiredPixels = height - START_Y - 50;
             
             if (maxPosition > 0 && requiredPixels > 0) {
                 const requiredPPM = requiredPixels / maxPosition;
-                state.tab1.pixelsPerMeter = Math.min(BASE_PIXELS_PER_METER, requiredPPM);
+                simState.pixelsPerMeter = Math.min(BASE_PIXELS_PER_METER, requiredPPM);
             } else {
-                state.tab1.pixelsPerMeter = BASE_PIXELS_PER_METER;
+                simState.pixelsPerMeter = BASE_PIXELS_PER_METER;
             }
         }
 
-        function updateEnergy() {
-            const s = state.tab1;
-            const e = s.energies;
-
-            e.kinetic = 0.5 * s.mass * s.velocity * s.velocity;
-            const elongation = s.position - s.l0;
-            e.potentialE = 0.5 * s.k * elongation * elongation;
-            const h = -(s.position - s.potentialGRefY);
-            e.potentialG = s.mass * s.gravity * h;
+        function updateEnergy(spring) {
+            const e = spring.energies;
+            e.kinetic = 0.5 * spring.mass * spring.velocity * spring.velocity;
+            const elongation = spring.position - spring.l0;
+            e.potentialE = 0.5 * spring.k * elongation * elongation;
+            const h = -(spring.position - spring.potentialGRefY);
+            e.potentialG = spring.mass * simState.gravity * h;
             e.total = e.kinetic + e.potentialE + e.potentialG;
         }
 
         function setEnergyChartScale() {
             if (!energyChart) return;
-            updateEnergy();
-            const e = state.tab1.energies;
+            
+            let maxBound = 1;
+            let minBound = -0.2;
 
-            const maxBound = Math.max(e.total, e.potentialE, 1);
-            const minBound = e.potentialG < 0 ? e.potentialG : -maxBound * 0.2;
+            simState.springs.forEach(s => {
+                updateEnergy(s);
+                maxBound = Math.max(maxBound, s.energies.total, s.energies.potentialE, 1);
+                minBound = Math.min(minBound, s.energies.potentialG);
+            });
 
-            energyChart.options.scales.x.max = maxBound * 1.2;
-            energyChart.options.scales.x.min = minBound * 1.2;
+            // **CORRECCIÓN**: Resetear escalas a null para que Chart.js las recalcule
+            energyChart.options.scales.x.min = null;
+            energyChart.options.scales.x.max = null;
+            energyChart.options.scales.y.min = null;
+            energyChart.options.scales.y.max = null;
+
+            if (simState.mode === 1) {
+                energyChart.options.scales.x.max = maxBound * 1.2;
+                energyChart.options.scales.x.min = minBound * 1.2;
+            } else {
+                energyChart.options.scales.y.max = maxBound * 1.2;
+                energyChart.options.scales.y.min = minBound * 1.2;
+            }
+            energyChart.update();
         }
 
 
         function updatePhysics() {
-            const s = state.tab1;
-            
-            if (s.simulationState === 'running' && !s.isDraggingMass) {
-                const elongation = s.position - s.l0;
-                const forceGravity = s.mass * s.gravity;
-                const forceElastic = -s.k * elongation;
-                const forceDamping = -s.damping * 100 * s.velocity;
-                const totalForce = forceGravity + forceElastic + forceDamping;
-                
-                s.acceleration = totalForce / s.mass;
-                s.velocity += s.acceleration / 60.0;
-                s.position += s.velocity / 60.0;
+            if (simState.simulationState !== 'running') return;
 
-                const equilibriumPos = getEquilibriumPosition();
-                const kineticEnergy = 0.5 * s.mass * s.velocity * s.velocity;
-                const potentialEnergy = 0.5 * s.k * Math.pow(s.position - equilibriumPos, 2);
-                if(kineticEnergy + potentialEnergy < 0.0001 && Math.abs(s.position - equilibriumPos) < 0.01) {
-                    s.position = equilibriumPos;
-                    s.velocity = 0;
+            simState.springs.forEach(s => {
+                if (s.isDraggingMass) {
                     s.acceleration = 0;
-                    s.simulationState = 'paused';
-                    startPauseBtn.textContent = 'Reanudar';
-                    startPauseBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
-                    startPauseBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    s.velocity = 0;
+                } else {
+                    const elongation = s.position - s.l0;
+                    const forceGravity = s.mass * simState.gravity;
+                    const forceElastic = -s.k * elongation;
+                    const forceDamping = -s.damping * 100 * s.velocity;
+                    const totalForce = forceGravity + forceElastic + forceDamping;
+                    
+                    s.acceleration = totalForce / s.mass;
+                    s.velocity += s.acceleration / 60.0;
+                    s.position += s.velocity / 60.0;
                 }
+                updateEnergy(s);
+            });
 
-                if (!s.chronometerManualPause) {
-                    s.chronometerTime += 1 / 60.0;
-                    const currentPosSign = Math.sign(s.position - equilibriumPos);
-                    if (s.lastPosSign !== 0 && Math.sign(s.lastPosSign) !== Math.sign(currentPosSign)) {
-                         s.oscillationCount += 0.5;
-                    }
-                    s.lastPosSign = currentPosSign;
-                }
-            } else if (s.isDraggingMass) {
-                 s.acceleration = 0;
-                 s.velocity = 0;
+            if (!simState.chronometerManualPause) {
+                simState.chronometerTime += 1 / 60.0;
             }
-            
-            updateEnergy();
         }
 
         // --- DRAWING ---
         function draw() {
             ctx.clearRect(0, 0, width, height);
-            drawTab1();
-            if (state.tab1.showEnergyGraph) {
+            
+            if (simState.showRuler) drawRuler();
+            drawReferenceLines();
+            if (simState.showChronometer) drawChronometer();
+            
+            drawSpringSystems();
+
+            if (simState.showEnergyGraph) {
                 updateEnergyGraph();
             }
             updatePhysics();
             requestAnimationFrame(draw);
         }
 
-        function drawTab1() {
-            const s = state.tab1;
-            if (s.showRuler) drawRuler();
-            drawReferenceLines();
-            if (s.showChronometer) drawChronometer();
+        function drawSpringSystems() {
+            let infoHtml = '';
+            simState.springs.forEach((s, i) => {
+                const startX = (width / (simState.mode + 1)) * (i + 1);
+                
+                ctx.save();
+                ctx.fillStyle = '#9ca3af';
+                ctx.font = '16px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText((i + 1).toString(), startX, START_Y - 20);
+                ctx.restore();
 
-            const startX = width / 2;
-            ctx.fillStyle = '#4b5563';
-            ctx.fillRect(startX - 100, START_Y - 10, 200, 10);
+                ctx.fillStyle = '#4b5563';
+                ctx.fillRect(startX - 50, START_Y - 10, 100, 10);
 
-            const springLength_px = s.position * s.pixelsPerMeter;
-            drawSpring(startX, START_Y, springLength_px, 25, 15);
-            const massY_px = START_Y + springLength_px;
-            drawMass(startX, massY_px, s.mass);
-
-            document.getElementById('info-display').innerHTML = `Longitud del Muelle: ${s.position.toFixed(3)} m<br>Velocidad: ${s.velocity.toFixed(3)} m/s`;
-            
-            if (s.simulationState !== 'initial') {
-                const Fe = s.k * (s.position - s.l0);
-                if (s.showForces) {
-                    const Fg = s.mass * s.gravity;
-                    const vectorX = startX + 80;
-                    drawVector(vectorX, massY_px, Fg * s.pixelsPerMeter / 50, '#ef4444', 'Fg');
-                    drawVector(vectorX, massY_px, -Fe * s.pixelsPerMeter / 50, '#22c55e', 'Fe');
+                const springLength_px = s.position * simState.pixelsPerMeter;
+                drawSpring(startX, START_Y, springLength_px, 25, 15);
+                const massY_px = START_Y + springLength_px;
+                
+                const massColor = i === 0 ? '#3b82f6' : '#f97316';
+                drawMass(startX, massY_px, s.mass, massColor);
+                
+                infoHtml += `<b>Muelle ${i+1}:</b> L=${s.position.toFixed(2)}m, v=${s.velocity.toFixed(2)}m/s<br>`;
+                
+                if (simState.simulationState !== 'initial') {
+                    const Fe = s.k * (s.position - s.l0);
+                    if (simState.showForces) {
+                        const Fg = s.mass * simState.gravity;
+                        drawVector(startX + 40, massY_px, Fg * simState.pixelsPerMeter / 50, '#ef4444', 'Fg');
+                        drawVector(startX + 40, massY_px, -Fe * simState.pixelsPerMeter / 50, '#22c55e', 'Fe');
+                    }
+                    if (simState.showVelocityAccelVectors) {
+                        if (Math.abs(s.velocity) > 0.001) drawVector(startX - 40, massY_px, s.velocity * 50, '#06b6d4', 'v');
+                        if (Math.abs(s.acceleration) > 0.01) drawVector(startX - 60, massY_px, s.acceleration * 10, '#d946ef', 'a');
+                    }
                 }
-                if (s.showVelocityAccelVectors) {
-                    const vectorX_va = startX - 80;
-                    if (Math.abs(s.velocity) > 0.001) drawVector(vectorX_va, massY_px, s.velocity * 50, '#06b6d4', 'v');
-                    if (Math.abs(s.acceleration) > 0.01) drawVector(vectorX_va - 30, massY_px, s.acceleration * 10, '#d946ef', 'a');
-                }
-            }
+            });
+            document.getElementById('info-display-canvas').innerHTML = infoHtml;
+            document.getElementById('info-display-panel').innerHTML = infoHtml;
         }
         
         function drawSpring(x, y, length, coils, width) {
             if (length <= 0) return;
+            const grad = ctx.createLinearGradient(x - width, y, x + width, y);
+            grad.addColorStop(0, '#a0a0a0');
+            grad.addColorStop(0.5, '#f0f0f0');
+            grad.addColorStop(1, '#a0a0a0');
+            
+            ctx.save();
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
             const step = length / coils;
             ctx.beginPath();
             ctx.moveTo(x, y);
@@ -782,21 +930,56 @@
                 ctx.lineTo(x + x_offset, y_pos);
             }
             ctx.lineTo(x, y + length);
-            ctx.strokeStyle = '#9ca3af';
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawMass(x, y, mass, color) {
+            const size = 25 + Math.sqrt(mass) * 12;
+            
+            const grad = ctx.createLinearGradient(x - size / 2, y, x + size / 2, y + size);
+            grad.addColorStop(0, lightenColor(color, 20));
+            grad.addColorStop(1, color);
+
+            ctx.beginPath();
+            ctx.rect(x - size / 2, y, size, size);
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.strokeStyle = darkenColor(color, 20);
             ctx.lineWidth = 2;
             ctx.stroke();
         }
 
-        function drawMass(x, y, mass) {
-            const size = 25 + Math.sqrt(mass) * 12;
-            ctx.beginPath();
-            ctx.rect(x - size / 2, y, size, size);
-            ctx.fillStyle = '#3b82f6';
-            ctx.fill();
-            ctx.strokeStyle = '#1e40af';
-            ctx.lineWidth = 2;
-            ctx.stroke();
+        function lightenColor(hex, percent) {
+            hex = hex.replace(/^\s*#|\s*$/g, '');
+            if(hex.length == 3){
+                hex = hex.replace(/(.)/g, '$1$1');
+            }
+            var r = parseInt(hex.substr(0, 2), 16),
+                g = parseInt(hex.substr(2, 2), 16),
+                b = parseInt(hex.substr(4, 2), 16);
+
+            return '#' +
+               ((0|(1<<8) + r + (256 - r) * percent / 100).toString(16)).substr(1) +
+               ((0|(1<<8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
+               ((0|(1<<8) + b + (256 - b) * percent / 100).toString(16)).substr(1);
         }
+
+        function darkenColor(hex, percent) {
+            hex = hex.replace(/^\s*#|\s*$/g, '');
+            if(hex.length == 3){
+                hex = hex.replace(/(.)/g, '$1$1');
+            }
+            var r = parseInt(hex.substr(0, 2), 16),
+                g = parseInt(hex.substr(2, 2), 16),
+                b = parseInt(hex.substr(4, 2), 16);
+
+            return '#' +
+               ((0|(1<<8) + r * (100 - percent) / 100).toString(16)).substr(1) +
+               ((0|(1<<8) + g * (100 - percent) / 100).toString(16)).substr(1) +
+               ((0|(1<<8) + b * (100 - percent) / 100).toString(16)).substr(1);
+        }
+
 
         function drawVector(startX, startY, value, color, label) {
             const arrowLength = value;
@@ -818,25 +1001,25 @@
             ctx.fill();
 
             ctx.fillStyle = color;
-            ctx.font = '14px Inter';
+            ctx.font = '12px Inter';
             ctx.textAlign = 'left';
-            ctx.fillText(label, startX + 15, startY + arrowLength / 2);
+            ctx.fillText(label, startX + 5, startY + arrowLength / 2);
         }
 
         function drawReferenceLines() {
-            const s = state.tab1;
-            const ppm = s.pixelsPerMeter;
-            if (s.showNaturalLength) {
-                const y = START_Y + s.l0 * ppm;
+            if (simState.springs.length === 0) return;
+
+            if (simState.showNaturalLength) {
+                const y = START_Y + simState.springs[0].l0 * simState.pixelsPerMeter;
                 drawDashedLine(0, y, width, y, '#f97316', 'L₀');
             }
-            if (s.showEquilibrium) {
-                const equilibriumPos = getEquilibriumPosition();
-                const y = START_Y + equilibriumPos * ppm;
-                drawDashedLine(0, y, width, y, '#22c55e', 'Equilibrio');
+            if (simState.showEquilibrium) {
+                const equilibriumPos = getEquilibriumPosition(simState.springs[0]);
+                const y = START_Y + equilibriumPos * simState.pixelsPerMeter;
+                drawDashedLine(0, y, width, y, '#22c55e', 'Eq');
             }
-            if (s.showMovableRef) {
-                drawDashedLine(0, s.movableRefY, width, s.movableRefY, '#a855f7', 'Ref');
+            if (simState.showMovableRef) {
+                drawDashedLine(0, simState.movableRefY, width, simState.movableRefY, '#a855f7', 'Ref');
             }
         }
         
@@ -858,8 +1041,8 @@
         }
 
         function drawRuler() {
-            const r = state.tab1.ruler;
-            const ppm = state.tab1.pixelsPerMeter;
+            const r = simState.ruler;
+            const ppm = simState.pixelsPerMeter;
             ctx.save();
             ctx.fillStyle = 'rgba(229, 231, 235, 0.2)';
             ctx.strokeStyle = 'rgba(156, 163, 175, 0.5)';
@@ -897,19 +1080,22 @@
         }
         
         function drawChronometer() {
-            const s = state.tab1;
-            chronoTimeEl.textContent = `${s.chronometerTime.toFixed(1)}s`;
-            iconPause.classList.toggle('hidden', s.chronometerManualPause);
-            iconPlay.classList.toggle('hidden', !s.chronometerManualPause);
+            chronoTimeEl.textContent = `${simState.chronometerTime.toFixed(1)}s`;
+            iconPause.classList.toggle('hidden', simState.chronometerManualPause);
+            iconPlay.classList.toggle('hidden', !simState.chronometerManualPause);
         }
 
         function updateEnergyGraph() {
             if (!energyChart) return;
-            const e = state.tab1.energies;
-            energyChart.data.datasets[0].data[0] = e.kinetic;
-            energyChart.data.datasets[0].data[1] = e.potentialE;
-            energyChart.data.datasets[0].data[2] = e.potentialG;
-            energyChart.data.datasets[0].data[3] = e.total;
+            if(simState.mode === 1) {
+                const e = simState.springs[0].energies;
+                energyChart.data.datasets[0].data = [e.kinetic, e.potentialE, e.potentialG, e.total];
+            } else {
+                simState.springs.forEach((s, i) => {
+                    const e = s.energies;
+                    energyChart.data.datasets[i].data = [e.kinetic, e.potentialE, e.potentialG, e.total];
+                });
+            }
             energyChart.update('none');
         }
 
@@ -920,7 +1106,6 @@
 
             function onMouseDown(e) {
                 if (window.innerWidth < 769) return;
-
                 isDragging = true;
                 const eventPos = e.touches ? e.touches[0] : e;
                 const rect = energyChartOverlay.getBoundingClientRect();
@@ -974,13 +1159,17 @@
             iconPause = document.getElementById('icon-pause');
             iconPlay = document.getElementById('icon-play');
             energyChartOverlay = document.getElementById('energy-chart-overlay');
+            simModeSelect = document.getElementById('sim-mode');
+            springsControlsContainer = document.getElementById('springs-controls-container');
+            globalControlsContainer = document.getElementById('global-controls-container');
+
 
             resizeCanvas();
             initEnergyChart();
             setupEventListeners();
             fullReset();
             
-            if (state.tab1.showEnergyGraph) {
+            if (simState.showEnergyGraph) {
                 energyChartOverlay.classList.remove('hidden');
             }
 
